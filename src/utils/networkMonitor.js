@@ -34,12 +34,12 @@ class NetworkMonitor {
 
     async getNetworkStats() {
         try {
-            const interface = await this.getNetworkInterface();
-            const { stdout } = await execAsync(`netstat -i | grep ${interface}`);
+            const networkInterface = await this.getNetworkInterface();
+            const { stdout } = await execAsync(`netstat -i | grep ${networkInterface}`);
             const stats = stdout.split(/\s+/);
             
             return {
-                interface: interface,
+                interface: networkInterface,
                 bytesIn: parseInt(stats[3]),
                 bytesOut: parseInt(stats[7])
             };
