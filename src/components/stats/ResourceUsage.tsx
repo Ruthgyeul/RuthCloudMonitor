@@ -19,6 +19,8 @@ const getStatusColor = (percentage: number): string => {
 export const ResourceUsage: React.FC<ResourceUsageProps> = ({ serverData, networkHistory }) => {
     // MB를 GB로 변환하는 함수
     const mbToGb = (mb: number) => (mb / 1024).toFixed(2);
+    // GB를 소수점 2자리로 포맷하는 함수
+    const gbFormat = (gb: number) => gb.toFixed(2);
 
     return (
         <div className="col-span-2 space-y-3">
@@ -50,7 +52,7 @@ export const ResourceUsage: React.FC<ResourceUsageProps> = ({ serverData, networ
                             <Activity className="h-4 w-4 text-green-400 mr-2" />
                             <span className="text-xs text-gray-300">RAM</span>
                         </div>
-                        <span className="text-xs text-gray-400">{serverData.memory.total}GB</span>
+                        <span className="text-xs text-gray-400">{mbToGb(serverData.memory.total)}GB</span>
                     </div>
                     <div className="flex items-center justify-between">
                         <MiniPieChart percentage={serverData.memory.percentage} size={50} />
@@ -70,7 +72,7 @@ export const ResourceUsage: React.FC<ResourceUsageProps> = ({ serverData, networ
                             <HardDrive className="h-4 w-4 text-yellow-400 mr-2" />
                             <span className="text-xs text-gray-300">DISK</span>
                         </div>
-                        <span className="text-xs text-gray-400">{serverData.disk.total}GB</span>
+                        <span className="text-xs text-gray-400">{gbFormat(serverData.disk.total)}GB</span>
                     </div>
                     <div className="flex items-center justify-between">
                         <MiniPieChart percentage={serverData.disk.percentage} size={50} />
@@ -78,7 +80,7 @@ export const ResourceUsage: React.FC<ResourceUsageProps> = ({ serverData, networ
                             <div className="text-xl font-bold" style={{ color: getStatusColor(serverData.disk.percentage) }}>
                                 {formatNumber(serverData.disk.percentage)}%
                             </div>
-                            <div className="text-xs text-gray-400">{mbToGb(serverData.disk.used)}GB</div>
+                            <div className="text-xs text-gray-400">{gbFormat(serverData.disk.used)}GB</div>
                         </div>
                     </div>
                 </div>
