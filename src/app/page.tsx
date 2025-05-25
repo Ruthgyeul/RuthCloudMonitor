@@ -128,7 +128,7 @@ export default function DisplayPage() {
             <SystemStats serverData={systemData} />
             <ResourceUsage serverData={systemData} networkHistory={networkHistory} />
           </div>
-          <div className="h-full">
+          <div className="h-5/6">
             <ProcessList processes={systemData.processes} />
           </div>
         </div>

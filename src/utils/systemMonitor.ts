@@ -159,7 +159,7 @@ async function getFanSpeed(): Promise<FanInfo> {
 }
 
 async function getProcesses(): Promise<Process[]> {
-  const { stdout } = await execAsync('ps aux --sort=-%cpu | head -n 31 | tail -n 30');
+  const { stdout } = await execAsync('ps aux --sort=-%cpu | head -n 21 | tail -n 20');
   const processes = stdout.split('\n')
     .filter(line => line.trim())
     .map((line, index) => {
