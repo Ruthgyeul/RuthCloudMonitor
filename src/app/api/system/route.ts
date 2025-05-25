@@ -67,15 +67,30 @@ async function getUptime() {
 }
 
 async function getTemperature() {
-    const { stdout: cpuTemp } = await execAsync('sensors | grep "Package id 0" | awk \'{print $4}\' | sed \'s/+//\' | sed \'s/°C//\'');
-    const { stdout: gpuTemp } = await execAsync('nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits');
-    const { stdout: moboTemp } = await execAsync('sensors | grep "temp1" | awk \'{print $2}\' | sed \'s/+//\' | sed \'s/°C//\'');
-    
-    return {
-        cpu: parseFloat(cpuTemp.trim()),
-        gpu: parseFloat(gpuTemp.trim()),
-        motherboard: parseFloat(moboTemp.trim())
-    };
+    try {
+        const { stdout: cpuTemp } = await execAsync('sensors | grep "Package id 0" | awk \'{print $4}\' | sed \'s/+//\' | sed \'s/°C//\'');
+        let gpuTemp = '0';
+        try {
+            const { stdout } = await execAsync('nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits');
+            gpuTemp = stdout;
+        } catch {
+            // GPU not available, use default value
+        }
+        const { stdout: moboTemp } = await execAsync('sensors | grep "temp1" | awk \'{print $2}\' | sed \'s/+//\' | sed \'s/°C//\'');
+        
+        return {
+            cpu: parseFloat(cpuTemp.trim()),
+            gpu: parseFloat(gpuTemp.trim()),
+            motherboard: parseFloat(moboTemp.trim())
+        };
+    } catch (error) {
+        console.error('Error getting temperature:', error);
+        return {
+            cpu: 0,
+            gpu: 0,
+            motherboard: 0
+        };
+    }
 }
 
 async function getFanSpeed() {
