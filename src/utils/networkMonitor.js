@@ -11,76 +11,76 @@ class NetworkMonitor {
 
     async getNetworkInterface() {
         try {
-            // Get the primary network interface on macOS
-            const { stdout } = await execAsync('route get 8.8.8.8 | grep interface | awk \'{print $2}\'');
-            return stdout.trim();
-        } catch {
-            return 'en0'; // Default interface on macOS
+            // First try to get LAN interface
+            const { stdout: lanInterface } = await execAsync("ip route get 8.8.8.8 | awk '{print $5}' | grep -E '^en|^eth'");
+            if (lanInterface.trim()) {
+                return lanInterface.trim();
+            }
+            
+            // If no LAN interface found, try WiFi
+            const { stdout: wifiInterface } = await execAsync("ip route get 8.8.8.8 | awk '{print $5}' | grep -E '^wl|^wlan'");
+            if (wifiInterface.trim()) {
+                return wifiInterface.trim();
+            }
+            
+            // If no specific interface found, return the default route interface
+            const { stdout: defaultInterface } = await execAsync("ip route get 8.8.8.8 | awk '{print $5}'");
+            return defaultInterface.trim();
+        } catch (error) {
+            console.error('Error getting network interface:', error);
+            return 'lo'; // Return loopback as fallback
         }
     }
 
-    async getNetworkStats(interfaceName) {
+    async getNetworkStats() {
         try {
-            // Get network statistics using netstat on macOS
-            const { stdout } = await execAsync(`netstat -ib | grep ${interfaceName}`);
+            const interface = await this.getNetworkInterface();
+            const { stdout } = await execAsync(`netstat -i | grep ${interface}`);
             const stats = stdout.split(/\s+/);
             
             return {
-                rxBytes: parseInt(stats[7] || '0'),
-                txBytes: parseInt(stats[10] || '0'),
-                timestamp: Date.now()
+                interface: interface,
+                bytesIn: parseInt(stats[3]),
+                bytesOut: parseInt(stats[7])
             };
         } catch (error) {
-            console.error('Failed to get network stats:', error);
+            console.error('Error getting network stats:', error);
             return {
-                rxBytes: 0,
-                txBytes: 0,
-                timestamp: Date.now()
+                interface: 'unknown',
+                bytesIn: 0,
+                bytesOut: 0
             };
         }
     }
 
     async getNetworkSpeed() {
         try {
-            const interfaceName = await this.getNetworkInterface();
-            const currentStats = await this.getNetworkStats(interfaceName);
-
-            if (!this.previousStats) {
-                this.previousStats = currentStats;
-                this.previousTimestamp = currentStats.timestamp;
-                // Wait a second before measuring speed
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                return this.getNetworkSpeed();
-            }
-
-            const timeDiff = (currentStats.timestamp - this.previousTimestamp) / 1000; // seconds
-            const rxDiff = currentStats.rxBytes - this.previousStats.rxBytes;
-            const txDiff = currentStats.txBytes - this.previousStats.txBytes;
-
-            const downloadSpeed = (rxDiff / timeDiff) / (1024 * 1024); // MB/s
-            const uploadSpeed = (txDiff / timeDiff) / (1024 * 1024); // MB/s
-
-            // Store current values for next measurement
-            this.previousStats = currentStats;
-            this.previousTimestamp = currentStats.timestamp;
-
+            const firstStats = await this.getNetworkStats();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const secondStats = await this.getNetworkStats();
+            
+            const downloadSpeed = (secondStats.bytesIn - firstStats.bytesIn) / 1024; // KB/s
+            const uploadSpeed = (secondStats.bytesOut - firstStats.bytesOut) / 1024; // KB/s
+            
             return {
-                download: Math.max(0, downloadSpeed),
-                upload: Math.max(0, uploadSpeed),
-                interface: interfaceName
+                download: Math.round(downloadSpeed),
+                upload: Math.round(uploadSpeed)
             };
         } catch (error) {
-            console.error('Network speed measurement error:', error);
-            return { download: 0, upload: 0, interface: 'unknown' };
+            console.error('Error getting network speed:', error);
+            return {
+                download: 0,
+                upload: 0
+            };
         }
     }
 
-    async getPingLatency(host = '8.8.8.8') {
+    async getPingLatency() {
         try {
-            const { stdout } = await execAsync(`ping -c 3 -t 2 ${host} | grep 'avg' | awk -F'/' '{print $5}'`);
-            return parseFloat(stdout.trim()) || 0;
+            const { stdout } = await execAsync('ping -c 3 8.8.8.8 | grep "avg" | awk -F "/" \'{print $5}\'');
+            return parseFloat(stdout.trim());
         } catch (error) {
-            console.error('Ping measurement error:', error);
+            console.error('Error getting ping latency:', error);
             return 0;
         }
     }

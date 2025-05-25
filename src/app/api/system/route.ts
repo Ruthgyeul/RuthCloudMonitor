@@ -29,7 +29,7 @@ async function getCpuInfo() {
 async function getMemoryInfo() {
     try {
         const { stdout } = await execAsync('free -m | grep Mem');
-        const [, total, used] = stdout.split(/\s+/);
+        const [, total, used, free, shared, cache, available] = stdout.split(/\s+/);
         const percentage = (parseInt(used) / parseInt(total)) * 100;
         
         return {
@@ -50,11 +50,11 @@ async function getMemoryInfo() {
 async function getDiskInfo() {
     try {
         const { stdout } = await execAsync('df -h / | tail -1');
-        const [, total, used, percentage] = stdout.split(/\s+/);
+        const [, total, used, available, percentage] = stdout.split(/\s+/);
         
         return {
-            total: parseInt(total),
-            used: parseInt(used),
+            total: parseInt(total.replace('G', '')),
+            used: parseInt(used.replace('G', '')),
             percentage: parseInt(percentage.replace('%', ''))
         };
     } catch (error) {
@@ -90,13 +90,13 @@ async function getNetworkInfo() {
 async function getUptime() {
     try {
         const { stdout } = await execAsync('uptime -p');
-        const matches = stdout.match(/(\d+) days?, (\d+) hours?, (\d+) minutes?/);
+        const matches = stdout.match(/(\d+) hours?, (\d+) minutes?/);
         
         if (matches) {
             return {
-                days: parseInt(matches[1]),
-                hours: parseInt(matches[2]),
-                minutes: parseInt(matches[3])
+                days: 0,
+                hours: parseInt(matches[1]),
+                minutes: parseInt(matches[2])
             };
         }
         
@@ -141,9 +141,9 @@ async function getFanSpeed() {
         const { stdout: caseFan2 } = await execAsync('sensors | grep "fan3" | awk \'{print $2}\'');
         
         return {
-            cpu: parseInt(cpuFan.trim()),
-            case1: parseInt(caseFan1.trim()),
-            case2: parseInt(caseFan2.trim())
+            cpu: parseInt(cpuFan.trim()) || 0,
+            case1: parseInt(caseFan1.trim()) || 0,
+            case2: parseInt(caseFan2.trim()) || 0
         };
     } catch (error) {
         console.error('Error getting fan speed:', error);
