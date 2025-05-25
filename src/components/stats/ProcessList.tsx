@@ -25,9 +25,9 @@ export const ProcessList: React.FC<ProcessListProps> = ({ processes }) => {
       </div>
 
       {/* Scrollable Process List */}
-      <div className="space-y-1 overflow-y-auto flex-1">
+      <div className="space-y-0.5 overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
         {sortedProcesses.map((process) => (
-          <div key={process.id} className="flex justify-between items-center text-xs">
+          <div key={process.id} className="flex justify-between items-center text-xs py-0.5 hover:bg-gray-700/50 rounded px-1">
             <span className="text-gray-400 truncate max-w-[60%]">{process.name}</span>
             <div className="flex items-center space-x-2">
               <span className="text-yellow-400">{formatNumber(process.cpu)}%</span>

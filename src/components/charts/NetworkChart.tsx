@@ -19,6 +19,22 @@ export const NetworkChart: React.FC<NetworkChartProps> = ({ data }) => {
         );
     }
 
+    // 데이터 포인트 수에 따라 X축 레이블 생성
+    const getXAxisLabel = (index: number) => {
+        const totalPoints = data.length;
+        const position = totalPoints - index - 1;
+        
+        if (position === 0) return 'now';
+        if (position <= 3) return `${position}s`;
+        return '';
+    };
+
+    // 데이터 포인트 수에 따라 표시할 레이블 수 조정
+    const xAxisTicks = data.map((_, index) => index).filter(index => {
+        const label = getXAxisLabel(index);
+        return label !== '';
+    });
+
     return (
         <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
             <div className="text-xs text-gray-300 mb-2">NETWORK ACTIVITY</div>
@@ -38,7 +54,8 @@ export const NetworkChart: React.FC<NetworkChartProps> = ({ data }) => {
                         <XAxis 
                             dataKey="time" 
                             tick={{ fontSize: 10, fill: '#9ca3af' }}
-                            tickFormatter={(value) => value.split(' ')[1]} // 시간만 표시
+                            tickFormatter={(_, index) => getXAxisLabel(index)}
+                            ticks={xAxisTicks}
                         />
                         <YAxis 
                             tick={{ fontSize: 10, fill: '#9ca3af' }}
