@@ -11,25 +11,41 @@ class NetworkMonitor {
 
     async getNetworkInterface() {
         try {
-            // First try to get LAN interface
-            const { stdout: lanInterface } = await execAsync("ip route get 8.8.8.8 | awk '{print $5}' | grep -E '^en|^eth'");
-            if (lanInterface.trim()) {
-                return lanInterface.trim();
+            // First try to get the default route interface
+            const { stdout: defaultRoute } = await execAsync('route -n get default | grep interface | awk \'{print $2}\'');
+            if (defaultRoute.trim()) {
+                return defaultRoute.trim();
             }
-            
-            // If no LAN interface found, try WiFi
-            const { stdout: wifiInterface } = await execAsync("ip route get 8.8.8.8 | awk '{print $5}' | grep -E '^wl|^wlan'");
-            if (wifiInterface.trim()) {
-                return wifiInterface.trim();
-            }
-            
-            // If no specific interface found, return the default route interface
-            const { stdout: defaultInterface } = await execAsync("ip route get 8.8.8.8 | awk '{print $5}'");
-            return defaultInterface.trim();
         } catch (error) {
-            console.error('Error getting network interface:', error);
-            return 'lo'; // Return loopback as fallback
+            console.log('Default route method failed, trying alternative methods...');
         }
+
+        try {
+            // Try to get active network interfaces
+            const { stdout: interfaces } = await execAsync('networksetup -listallhardwareports | grep -A 1 "Wi-Fi\\|Ethernet" | grep "Device" | awk \'{print $2}\'');
+            const interfaceList = interfaces.split('\n').filter(Boolean);
+            
+            // Return the first active interface
+            if (interfaceList.length > 0) {
+                return interfaceList[0].trim();
+            }
+        } catch (error) {
+            console.log('Hardware ports method failed, trying ifconfig...');
+        }
+
+        try {
+            // Try to get interface from ifconfig
+            const { stdout: ifconfig } = await execAsync('ifconfig | grep -E "en[0-9]|eth[0-9]" | head -n 1 | awk \'{print $1}\'');
+            if (ifconfig.trim()) {
+                return ifconfig.trim();
+            }
+        } catch (error) {
+            console.log('ifconfig method failed, using fallback...');
+        }
+
+        // If all methods fail, return a default interface
+        console.log('Using fallback network interface');
+        return 'en0'; // Default to en0 which is common on macOS
     }
 
     async getNetworkStats() {
