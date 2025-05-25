@@ -56,9 +56,9 @@ get_network_info() {
     echo "rx_bytes_prev=$rx_bytes" > /tmp/network_stats
     echo "tx_bytes_prev=$tx_bytes" >> /tmp/network_stats
     
-    # 속도 계산 (바이트/초)
-    rx_speed=$(( (rx_bytes - rx_bytes_prev) ))
-    tx_speed=$(( (tx_bytes - tx_bytes_prev) ))
+    # 속도 계산 (KB/s)
+    rx_speed=$(echo "scale=2; ($rx_bytes - $rx_bytes_prev) / 1024" | bc)
+    tx_speed=$(echo "scale=2; ($tx_bytes - $tx_bytes_prev) / 1024" | bc)
     
     # ping 테스트
     ping_result=$(ping -c 1 8.8.8.8 2>/dev/null | grep "time=" | awk '{print $7}' | sed 's/time=//' || echo "0")
@@ -88,15 +88,33 @@ get_temperature() {
 
 # 팬 속도 정보 수집
 get_fan_speed() {
+    # 기본값 설정
+    cpu_fan="0"
+    case_fan1="0"
+    case_fan2="0"
+    
+    # sensors 명령어가 있는 경우에만 시도
     if command -v sensors &> /dev/null; then
-        cpu_fan=$(sensors | grep "fan1" | awk '{print $2}' || echo "0")
-        case_fan1=$(sensors | grep "fan2" | awk '{print $2}' || echo "0")
-        case_fan2=$(sensors | grep "fan3" | awk '{print $2}' || echo "0")
-    else
-        cpu_fan="0"
-        case_fan1="0"
-        case_fan2="0"
+        # CPU 팬
+        if sensors | grep -q "fan1"; then
+            cpu_fan=$(sensors | grep "fan1" | awk '{print $2}' || echo "0")
+        fi
+        
+        # 케이스 팬 1
+        if sensors | grep -q "fan2"; then
+            case_fan1=$(sensors | grep "fan2" | awk '{print $2}' || echo "0")
+        fi
+        
+        # 케이스 팬 2
+        if sensors | grep -q "fan3"; then
+            case_fan2=$(sensors | grep "fan3" | awk '{print $2}' || echo "0")
+        fi
     fi
+    
+    # 값이 비어있거나 숫자가 아닌 경우 0으로 설정
+    cpu_fan=$(echo $cpu_fan | grep -E '^[0-9]+$' || echo "0")
+    case_fan1=$(echo $case_fan1 | grep -E '^[0-9]+$' || echo "0")
+    case_fan2=$(echo $case_fan2 | grep -E '^[0-9]+$' || echo "0")
     
     echo "{\"cpu\":$cpu_fan,\"case1\":$case_fan1,\"case2\":$case_fan2}"
 }
@@ -113,6 +131,11 @@ get_uptime() {
     days=$(echo $uptime_info | grep -o '[0-9]* day' | awk '{print $1}' || echo "0")
     hours=$(echo $uptime_info | grep -o '[0-9]* hour' | awk '{print $1}' || echo "0")
     minutes=$(echo $uptime_info | grep -o '[0-9]* minute' | awk '{print $1}' || echo "0")
+    
+    # 값이 비어있는 경우 0으로 설정
+    days=${days:-0}
+    hours=${hours:-0}
+    minutes=${minutes:-0}
     
     echo "{\"days\":$days,\"hours\":$hours,\"minutes\":$minutes}"
 }
