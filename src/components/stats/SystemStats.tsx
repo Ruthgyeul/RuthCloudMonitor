@@ -63,11 +63,11 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
                 <div className="space-y-1 text-xs">
                     <div className="flex justify-between">
                         <span className="text-gray-400">Download</span>
-                        <span className="text-green-400 font-mono">{formatNumber(serverData.network.download)} KB/s</span>
+                        <span className="text-blue-400 font-mono">{formatNumber(serverData.network.download)} KB/s</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-gray-400">Upload</span>
-                        <span className="text-blue-400 font-mono">{formatNumber(serverData.network.upload)} KB/s</span>
+                        <span className="text-green-400 font-mono">{formatNumber(serverData.network.upload)} KB/s</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-gray-400">PING</span>
