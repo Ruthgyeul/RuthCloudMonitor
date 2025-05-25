@@ -18,8 +18,8 @@ export const ProcessList: React.FC<ProcessListProps> = ({ processes }) => {
       
       {/* Column Headers */}
       <div className="flex justify-between items-center text-xs text-gray-400 mb-2 px-1">
-        <span className="max-w-[50%]">Process Name</span>
-        <div className="flex items-center space-x-3">
+        <span className="max-w-[50%]">Name</span>
+        <div className="flex items-center space-x-2">
           <span className="text-yellow-400 w-16 text-right">CPU %</span>
           <span className="text-blue-400 w-16 text-right">RAM %</span>
           <span className="text-gray-400 w-16 text-center">Status</span>
@@ -31,7 +31,7 @@ export const ProcessList: React.FC<ProcessListProps> = ({ processes }) => {
         {sortedProcesses.map((process) => (
           <div key={process.id} className="flex justify-between items-center text-xs py-0.5 hover:bg-gray-700/50 rounded px-1">
             <span className="text-gray-400 truncate max-w-[50%]">{process.name}</span>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <span className="text-yellow-400 w-16 text-right">{formatNumber(process.cpu)}%</span>
               <span className="text-blue-400 w-16 text-right">{formatNumber(process.memory)}%</span>
               <span className={`px-1 rounded w-16 text-center ${
