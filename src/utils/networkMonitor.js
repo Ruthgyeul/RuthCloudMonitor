@@ -11,39 +11,32 @@ class NetworkMonitor {
 
     async getNetworkInterface() {
         try {
-            // 활성화된 네트워크 인터페이스 찾기
-            const { stdout } = await execAsync('ip route get 8.8.8.8 | grep -oP "dev \\K\\w+"');
+            // Get the primary network interface on macOS
+            const { stdout } = await execAsync('route get 8.8.8.8 | grep interface | awk \'{print $2}\'');
             return stdout.trim();
         } catch {
-            // 기본 인터페이스들 시도
-            const interfaces = ['eth0', 'enp0s3', 'wlan0', 'wlp2s0'];
-            for (const iface of interfaces) {
-                try {
-                    await execAsync(`cat /sys/class/net/${iface}/operstate`);
-                    return iface;
-                } catch {
-                    continue;
-                }
-            }
-            return 'eth0'; // 기본값
+            return 'en0'; // Default interface on macOS
         }
     }
 
     async getNetworkStats(interfaceName) {
         try {
-            const rxPath = `/sys/class/net/${interfaceName}/statistics/rx_bytes`;
-            const txPath = `/sys/class/net/${interfaceName}/statistics/tx_bytes`;
-
-            const { stdout: rxBytes } = await execAsync(`cat ${rxPath}`);
-            const { stdout: txBytes } = await execAsync(`cat ${txPath}`);
-
+            // Get network statistics using netstat on macOS
+            const { stdout } = await execAsync(`netstat -ib | grep ${interfaceName}`);
+            const stats = stdout.split(/\s+/);
+            
             return {
-                rxBytes: parseInt(rxBytes.trim()),
-                txBytes: parseInt(txBytes.trim()),
+                rxBytes: parseInt(stats[7] || '0'),
+                txBytes: parseInt(stats[10] || '0'),
                 timestamp: Date.now()
             };
         } catch (error) {
-            throw new Error(`Failed to get network stats for ${interfaceName}: ${error.message}`);
+            console.error('Failed to get network stats:', error);
+            return {
+                rxBytes: 0,
+                txBytes: 0,
+                timestamp: Date.now()
+            };
         }
     }
 
@@ -55,19 +48,19 @@ class NetworkMonitor {
             if (!this.previousStats) {
                 this.previousStats = currentStats;
                 this.previousTimestamp = currentStats.timestamp;
-                // 첫 번째 호출에서는 잠시 대기 후 다시 측정
+                // Wait a second before measuring speed
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 return this.getNetworkSpeed();
             }
 
-            const timeDiff = (currentStats.timestamp - this.previousTimestamp) / 1000; // 초
+            const timeDiff = (currentStats.timestamp - this.previousTimestamp) / 1000; // seconds
             const rxDiff = currentStats.rxBytes - this.previousStats.rxBytes;
             const txDiff = currentStats.txBytes - this.previousStats.txBytes;
 
             const downloadSpeed = (rxDiff / timeDiff) / (1024 * 1024); // MB/s
             const uploadSpeed = (txDiff / timeDiff) / (1024 * 1024); // MB/s
 
-            // 다음 측정을 위해 현재 값을 저장
+            // Store current values for next measurement
             this.previousStats = currentStats;
             this.previousTimestamp = currentStats.timestamp;
 
@@ -84,7 +77,7 @@ class NetworkMonitor {
 
     async getPingLatency(host = '8.8.8.8') {
         try {
-            const { stdout } = await execAsync(`ping -c 3 -W 2000 ${host} | grep 'avg' | awk -F'/' '{print $5}'`);
+            const { stdout } = await execAsync(`ping -c 3 -t 2 ${host} | grep 'avg' | awk -F'/' '{print $5}'`);
             return parseFloat(stdout.trim()) || 0;
         } catch (error) {
             console.error('Ping measurement error:', error);
@@ -93,7 +86,7 @@ class NetworkMonitor {
     }
 }
 
-// 싱글톤 인스턴스
+// Singleton instance
 const networkMonitor = new NetworkMonitor();
 
 export default networkMonitor;
