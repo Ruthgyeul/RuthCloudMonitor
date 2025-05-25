@@ -40,6 +40,28 @@ export default function DisplayPage() {
 
         setSystemData(data);
         setError(null);
+
+        // 네트워크 히스토리 업데이트
+        const now = new Date();
+        const time = now.toLocaleTimeString('ko-KR', { 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          second: '2-digit',
+          hour12: false 
+        });
+        
+        setNetworkHistory(prev => {
+          const newHistory = [
+            ...prev,
+            {
+              time,
+              download: data.network.download,
+              upload: data.network.upload
+            }
+          ];
+          // 최대 60개의 데이터 포인트만 유지
+          return newHistory.slice(-60);
+        });
       } catch (err) {
         console.error('Error fetching system data:', err);
         setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -68,11 +90,11 @@ export default function DisplayPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h2 className="text-red-800 font-semibold">Error</h2>
-            <p className="text-red-600">{error}</p>
+      <div className="min-h-screen bg-gray-900">
+        <Header error={error} />
+        <div className="p-4">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400">
+            {error}
           </div>
         </div>
       </div>
@@ -81,10 +103,16 @@ export default function DisplayPage() {
 
   if (!systemData) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-gray-600">Loading system data...</p>
+      <div className="min-h-screen bg-gray-900">
+        <Header error={null} />
+        <div className="p-4">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-800 rounded w-1/4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="h-32 bg-gray-800 rounded"></div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -92,92 +120,16 @@ export default function DisplayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* CPU Card */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-2">CPU</h2>
-            <p>Usage: {systemData.cpu?.usage?.toFixed(1) ?? 'N/A'}%</p>
-            <p>Cores: {systemData.cpu?.cores ?? 'N/A'}</p>
-            <p>Temperature: {systemData.cpu?.temperature ?? 'N/A'}°C</p>
+    <div className="min-h-screen bg-gray-900">
+      <Header error={error} />
+      <div className="p-4 h-[calc(100vh-3rem)]">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+          <div className="lg:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <SystemStats serverData={systemData} />
+            <ResourceUsage serverData={systemData} networkHistory={networkHistory} />
           </div>
-
-          {/* Memory Card */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-2">Memory</h2>
-            <p>Used: {systemData.memory?.used ? (systemData.memory.used / 1024).toFixed(1) : 'N/A'} GB</p>
-            <p>Total: {systemData.memory?.total ? (systemData.memory.total / 1024).toFixed(1) : 'N/A'} GB</p>
-            <p>Usage: {systemData.memory?.percentage?.toFixed(1) ?? 'N/A'}%</p>
-          </div>
-
-          {/* Disk Card */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-2">Disk</h2>
-            <p>Used: {systemData.disk?.used ?? 'N/A'} GB</p>
-            <p>Total: {systemData.disk?.total ?? 'N/A'} GB</p>
-            <p>Usage: {systemData.disk?.percentage ?? 'N/A'}%</p>
-          </div>
-
-          {/* Network Card */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-2">Network</h2>
-            <p>Download: {systemData.network?.download?.toFixed(2) ?? 'N/A'} KB/s</p>
-            <p>Upload: {systemData.network?.upload?.toFixed(2) ?? 'N/A'} KB/s</p>
-            <p>Ping: {systemData.network?.ping ?? 'N/A'} ms</p>
-          </div>
-
-          {/* Temperature Card */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-2">Temperature</h2>
-            <p>CPU: {systemData.temperature?.cpu ?? 'N/A'}°C</p>
-            <p>GPU: {systemData.temperature?.gpu ?? 'N/A'}°C</p>
-            <p>Motherboard: {systemData.temperature?.motherboard ?? 'N/A'}°C</p>
-          </div>
-
-          {/* Fan Speed Card */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-2">Fan Speed</h2>
-            <p>CPU Fan: {systemData.fan?.cpu ?? 'N/A'} RPM</p>
-            <p>Case Fan 1: {systemData.fan?.case1 ?? 'N/A'} RPM</p>
-            <p>Case Fan 2: {systemData.fan?.case2 ?? 'N/A'} RPM</p>
-          </div>
-
-          {/* Uptime Card */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-2">Uptime</h2>
-            <p>Days: {systemData.uptime?.days ?? 'N/A'}</p>
-            <p>Hours: {systemData.uptime?.hours ?? 'N/A'}</p>
-            <p>Minutes: {systemData.uptime?.minutes ?? 'N/A'}</p>
-          </div>
-
-          {/* Top Processes Card */}
-          <div className="bg-white rounded-lg shadow p-4 col-span-full">
-            <h2 className="text-lg font-semibold mb-2">Top Processes</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead>
-                  <tr>
-                    <th className="text-left">Process</th>
-                    <th className="text-right">CPU %</th>
-                    <th className="text-right">Memory %</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {systemData.processes?.map((process, index) => (
-                    <tr key={index}>
-                      <td className="text-left">{process.name ?? 'Unknown'}</td>
-                      <td className="text-right">{process.cpu?.toFixed(1) ?? 'N/A'}%</td>
-                      <td className="text-right">{process.memory?.toFixed(1) ?? 'N/A'}%</td>
-                    </tr>
-                  )) ?? (
-                    <tr>
-                      <td colSpan={3} className="text-center">No process data available</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+          <div className="h-full">
+            <ProcessList processes={systemData.processes} />
           </div>
         </div>
       </div>

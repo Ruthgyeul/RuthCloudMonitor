@@ -11,11 +11,11 @@ export const ProcessList: React.FC<ProcessListProps> = ({ processes }) => {
   const sortedProcesses = processes.sort((a, b) => b.cpu - a.cpu);
 
   return (
-    <div className="bg-gray-800 rounded-lg p-2 border border-gray-700 h-full flex flex-col">
-      <div className="text-xs text-gray-300 mb-1">TOP PROCESSES</div>
+    <div className="bg-gray-800 rounded-lg p-3 border border-gray-700 h-full flex flex-col">
+      <div className="text-xs text-gray-300 mb-2">TOP PROCESSES</div>
       
       {/* Column Headers */}
-      <div className="flex justify-between items-center text-xs text-gray-400 mb-1 px-1">
+      <div className="flex justify-between items-center text-xs text-gray-400 mb-2 px-1">
         <span className="max-w-[60%]">Process Name</span>
         <div className="flex items-center space-x-2">
           <span className="text-yellow-400">CPU %</span>
