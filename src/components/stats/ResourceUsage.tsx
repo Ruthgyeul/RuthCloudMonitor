@@ -17,6 +17,9 @@ const getStatusColor = (percentage: number): string => {
 };
 
 export const ResourceUsage: React.FC<ResourceUsageProps> = ({ serverData, networkHistory }) => {
+    // MB를 GB로 변환하는 함수
+    const mbToGb = (mb: number) => (mb / 1024).toFixed(2);
+
     return (
         <div className="col-span-2 space-y-3">
             {/* Resource Usage Cards */}
@@ -55,7 +58,7 @@ export const ResourceUsage: React.FC<ResourceUsageProps> = ({ serverData, networ
                             <div className="text-xl font-bold" style={{ color: getStatusColor(serverData.memory.percentage) }}>
                                 {formatNumber(serverData.memory.percentage)}%
                             </div>
-                            <div className="text-xs text-gray-400">{serverData.memory.used}GB</div>
+                            <div className="text-xs text-gray-400">{mbToGb(serverData.memory.used)}GB</div>
                         </div>
                     </div>
                 </div>
@@ -75,7 +78,7 @@ export const ResourceUsage: React.FC<ResourceUsageProps> = ({ serverData, networ
                             <div className="text-xl font-bold" style={{ color: getStatusColor(serverData.disk.percentage) }}>
                                 {formatNumber(serverData.disk.percentage)}%
                             </div>
-                            <div className="text-xs text-gray-400">{serverData.disk.used}GB</div>
+                            <div className="text-xs text-gray-400">{mbToGb(serverData.disk.used)}GB</div>
                         </div>
                     </div>
                 </div>

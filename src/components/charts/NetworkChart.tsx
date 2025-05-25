@@ -1,6 +1,6 @@
 import React from 'react';
 import { NetworkHistoryEntry } from '@/types/system';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatNumber } from '@/utils/numberFormat';
 
 interface NetworkChartProps {
@@ -70,6 +70,13 @@ export const NetworkChart: React.FC<NetworkChartProps> = ({ data }) => {
                                 borderRadius: '0.375rem',
                                 color: '#e5e7eb'
                             }}
+                        />
+                        <Legend 
+                            verticalAlign="top" 
+                            height={36}
+                            formatter={(value) => (
+                                <span className="text-xs text-gray-400">{value}</span>
+                            )}
                         />
                         <Area
                             type="monotone"
