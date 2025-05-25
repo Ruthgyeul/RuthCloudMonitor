@@ -29,7 +29,7 @@ async function getCpuInfo() {
 async function getMemoryInfo() {
     try {
         const { stdout } = await execAsync('free -m | grep Mem');
-        const [, total, used, free, shared, cache, available] = stdout.split(/\s+/);
+        const [, total, used] = stdout.split(/\s+/);
         const percentage = (parseInt(used) / parseInt(total)) * 100;
         
         return {
@@ -50,7 +50,7 @@ async function getMemoryInfo() {
 async function getDiskInfo() {
     try {
         const { stdout } = await execAsync('df -h / | tail -1');
-        const [, total, used, available, percentage] = stdout.split(/\s+/);
+        const [, total, used, , percentage] = stdout.split(/\s+/);
         
         return {
             total: parseInt(total.replace('G', '')),
@@ -72,11 +72,15 @@ async function getNetworkInfo() {
         const networkSpeed = await networkMonitor.getNetworkSpeed();
         const ping = await networkMonitor.getPingLatency();
         
+        // Ensure all values are non-negative
         return {
-            download: networkSpeed.download,
-            upload: networkSpeed.upload,
-            ping: ping,
-            errorRates: networkSpeed.errorRates
+            download: Math.max(networkSpeed.download, 0),
+            upload: Math.max(networkSpeed.upload, 0),
+            ping: Math.max(ping, 0),
+            errorRates: {
+                rx: networkSpeed.errorRates.rx || '0',
+                tx: networkSpeed.errorRates.tx || '0'
+            }
         };
     } catch (error) {
         console.error('Error getting network info:', error);
@@ -85,8 +89,8 @@ async function getNetworkInfo() {
             upload: 0,
             ping: 0,
             errorRates: {
-                rx: '0.00',
-                tx: '0.00'
+                rx: '0',
+                tx: '0'
             }
         };
     }
@@ -191,14 +195,19 @@ export async function GET() {
             fan,
             processes
         ] = await Promise.all([
-            getCpuInfo(),
-            getMemoryInfo(),
-            getDiskInfo(),
-            getNetworkInfo(),
-            getUptime(),
-            getTemperature(),
-            getFanSpeed(),
-            getProcesses()
+            getCpuInfo().catch(() => ({ usage: 0, cores: 0, temperature: 0 })),
+            getMemoryInfo().catch(() => ({ used: 0, total: 0, percentage: 0 })),
+            getDiskInfo().catch(() => ({ used: 0, total: 0, percentage: 0 })),
+            getNetworkInfo().catch(() => ({ 
+                download: 0, 
+                upload: 0, 
+                ping: 0,
+                errorRates: { rx: '0', tx: '0' }
+            })),
+            getUptime().catch(() => ({ days: 0, hours: 0, minutes: 0 })),
+            getTemperature().catch(() => ({ cpu: 0, gpu: 0, motherboard: 0 })),
+            getFanSpeed().catch(() => ({ cpu: 0, case1: 0, case2: 0 })),
+            getProcesses().catch(() => [])
         ]);
 
         return NextResponse.json({
@@ -217,7 +226,15 @@ export async function GET() {
             cpu: { usage: 0, cores: 0, temperature: 0 },
             memory: { used: 0, total: 0, percentage: 0 },
             disk: { used: 0, total: 0, percentage: 0 },
-            network: { download: 0, upload: 0, ping: 0 },
+            network: { 
+                download: 0, 
+                upload: 0, 
+                ping: 0,
+                errorRates: {
+                    rx: '0',
+                    tx: '0'
+                }
+            },
             uptime: { days: 0, hours: 0, minutes: 0 },
             temperature: { cpu: 0, gpu: 0, motherboard: 0 },
             fan: { cpu: 0, case1: 0, case2: 0 },

@@ -8,28 +8,55 @@ class NetworkMonitor {
     private lastTxBytes: number = 0;
     private lastCheckTime: number = Date.now();
 
+    async getNetworkInterface() {
+        try {
+            // Try to get the primary network interface on Ubuntu
+            const { stdout } = await execAsync("ip route | grep default | awk '{print $5}'");
+            const networkInterface = stdout.trim();
+            if (networkInterface) {
+                return networkInterface;
+            }
+            
+            // Fallback to checking common interface names
+            const { stdout: interfaces } = await execAsync("ip link show | grep 'state UP' | awk -F': ' '{print $2}'");
+            const interfaceList = interfaces.split('\n').filter(Boolean);
+            
+            // Try to find a non-loopback interface
+            const nonLoopback = interfaceList.find(iface => iface !== 'lo');
+            if (nonLoopback) {
+                return nonLoopback;
+            }
+            
+            return 'lo'; // Return loopback as last resort
+        } catch (error) {
+            console.error('Error getting network interface:', error);
+            return 'lo';
+        }
+    }
+
     async getNetworkSpeed() {
         try {
-            // Get network interface statistics using ifconfig
-            const { stdout } = await execAsync('ifconfig | grep -A 5 "enp\\|eth0" | grep "RX bytes"');
-            const rxMatch = stdout.match(/RX bytes:(\d+)/);
-            const txMatch = stdout.match(/TX bytes:(\d+)/);
-
+            const networkInterface = await this.getNetworkInterface();
+            
+            // Get network statistics using ip command (more reliable on Ubuntu)
+            const { stdout } = await execAsync(`ip -s link show ${networkInterface}`);
+            const rxMatch = stdout.match(/RX: bytes\s+(\d+)/);
+            const txMatch = stdout.match(/TX: bytes\s+(\d+)/);
+            
             const currentRxBytes = rxMatch ? parseInt(rxMatch[1]) : 0;
             const currentTxBytes = txMatch ? parseInt(txMatch[1]) : 0;
             const currentTime = Date.now();
 
             // Calculate time difference in seconds
-            const timeDiff = (currentTime - this.lastCheckTime) / 1000;
+            const timeDiff = Math.max((currentTime - this.lastCheckTime) / 1000, 0.1); // Prevent division by zero
 
             // Calculate speeds in Mbps
             const downloadSpeed = ((currentRxBytes - this.lastRxBytes) * 8) / (1024 * 1024 * timeDiff);
             const uploadSpeed = ((currentTxBytes - this.lastTxBytes) * 8) / (1024 * 1024 * timeDiff);
 
-            // Get error rates using ifconfig
-            const { stdout: errorStats } = await execAsync('ifconfig | grep -A 5 "enp\\|eth0" | grep "RX errors"');
-            const rxErrors = errorStats.match(/RX errors:(\d+)/)?.[1] || '0';
-            const txErrors = errorStats.match(/TX errors:(\d+)/)?.[1] || '0';
+            // Get error rates using ip command
+            const rxErrors = stdout.match(/RX: errors\s+(\d+)/)?.[1] || '0';
+            const txErrors = stdout.match(/TX: errors\s+(\d+)/)?.[1] || '0';
 
             // Update last values
             this.lastRxBytes = currentRxBytes;
@@ -37,8 +64,8 @@ class NetworkMonitor {
             this.lastCheckTime = currentTime;
 
             return {
-                download: Math.round(downloadSpeed * 100) / 100,
-                upload: Math.round(uploadSpeed * 100) / 100,
+                download: Math.max(Math.round(downloadSpeed * 100) / 100, 0),
+                upload: Math.max(Math.round(uploadSpeed * 100) / 100, 0),
                 errorRates: {
                     rx: rxErrors,
                     tx: txErrors
@@ -46,6 +73,11 @@ class NetworkMonitor {
             };
         } catch (error) {
             console.error('Error getting network speed:', error);
+            // Reset counters on error to prevent incorrect speed calculations
+            this.lastRxBytes = 0;
+            this.lastTxBytes = 0;
+            this.lastCheckTime = Date.now();
+            
             return {
                 download: 0,
                 upload: 0,
@@ -59,10 +91,10 @@ class NetworkMonitor {
 
     async getPingLatency() {
         try {
-            // Ping Google's DNS server (8.8.8.8) once
+            // Use Google's DNS server for ping test
             const { stdout } = await execAsync('ping -c 1 8.8.8.8');
             const match = stdout.match(/time=(\d+\.?\d*) ms/);
-            return match ? parseFloat(match[1]) : 0;
+            return match ? Math.max(parseFloat(match[1]), 0) : 0;
         } catch (error) {
             console.error('Error getting ping latency:', error);
             return 0;
