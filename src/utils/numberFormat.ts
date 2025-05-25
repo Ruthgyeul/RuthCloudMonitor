@@ -34,7 +34,11 @@ export const formatServerData = (data: ServerData): ServerData => {
         network: {
             download: formatNumber(data.network.download),
             upload: formatNumber(data.network.upload),
-            ping: formatNumber(data.network.ping)
+            ping: formatNumber(data.network.ping),
+            errorRates: {
+                rx: data.network.errorRates.rx,
+                tx: data.network.errorRates.tx
+            }
         },
         uptime: {
             days: data.uptime.days,

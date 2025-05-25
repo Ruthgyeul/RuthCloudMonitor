@@ -16,7 +16,15 @@ export default function DisplayPage() {
     cpu: { usage: 0, cores: 0, temperature: 0 },
     memory: { used: 0, total: 0, percentage: 0 },
     disk: { used: 0, total: 0, percentage: 0 },
-    network: { download: 0, upload: 0, ping: 0 },
+    network: { 
+      download: 0, 
+      upload: 0, 
+      ping: 0,
+      errorRates: {
+        rx: '0.00',
+        tx: '0.00'
+      }
+    },
     uptime: { days: 0, hours: 0, minutes: 0 },
     temperature: { cpu: 0, gpu: 0, motherboard: 0 },
     fan: { cpu: 0, case1: 0, case2: 0 },

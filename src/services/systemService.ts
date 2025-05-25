@@ -50,7 +50,11 @@ export const fetchSystemData = async (): Promise<{ serverData: ServerData; netwo
                 network: {
                     download: newDataPoint.download,
                     upload: newDataPoint.upload,
-                    ping: Math.random() * 50 + 10
+                    ping: Math.random() * 50 + 10,
+                    errorRates: {
+                        rx: (Math.random() * 0.1).toFixed(2),
+                        tx: (Math.random() * 0.1).toFixed(2)
+                    }
                 },
                 uptime: {
                     days: Math.floor(Math.random() * 30),

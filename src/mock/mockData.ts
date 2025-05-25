@@ -20,6 +20,10 @@ export const generateMockServerData = (): ServerData => ({
     download: Math.random() * 100,
     upload: Math.random() * 50,
     ping: Math.floor(Math.random() * 50) + 10,
+    errorRates: {
+      rx: (Math.random() * 0.1).toFixed(2),
+      tx: (Math.random() * 0.1).toFixed(2)
+    }
   },
   uptime: {
     days: Math.floor(Math.random() * 30),
