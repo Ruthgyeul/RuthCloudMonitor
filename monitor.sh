@@ -89,9 +89,9 @@ get_temperature() {
 # 팬 속도 정보 수집
 get_fan_speed() {
     # 기본값 설정
-    cpu_fan="0"
-    case_fan1="0"
-    case_fan2="0"
+    cpu_fan=0
+    case_fan1=0
+    case_fan2=0
     
     # sensors 명령어가 있는 경우에만 시도
     if command -v sensors &> /dev/null; then
@@ -127,15 +127,33 @@ get_processes() {
 
 # 업타임 정보 수집
 get_uptime() {
-    uptime_info=$(uptime -p)
-    days=$(echo $uptime_info | grep -o '[0-9]* day' | awk '{print $1}' || echo "0")
-    hours=$(echo $uptime_info | grep -o '[0-9]* hour' | awk '{print $1}' || echo "0")
-    minutes=$(echo $uptime_info | grep -o '[0-9]* minute' | awk '{print $1}' || echo "0")
+    # 기본값 설정
+    days=0
+    hours=0
+    minutes=0
     
-    # 값이 비어있는 경우 0으로 설정
-    days=${days:-0}
-    hours=${hours:-0}
-    minutes=${minutes:-0}
+    # uptime 정보 파싱
+    uptime_info=$(uptime -p)
+    
+    # days 추출
+    if echo "$uptime_info" | grep -q "day"; then
+        days=$(echo "$uptime_info" | grep -o '[0-9]* day' | awk '{print $1}')
+    fi
+    
+    # hours 추출
+    if echo "$uptime_info" | grep -q "hour"; then
+        hours=$(echo "$uptime_info" | grep -o '[0-9]* hour' | awk '{print $1}')
+    fi
+    
+    # minutes 추출
+    if echo "$uptime_info" | grep -q "minute"; then
+        minutes=$(echo "$uptime_info" | grep -o '[0-9]* minute' | awk '{print $1}')
+    fi
+    
+    # 값이 비어있거나 숫자가 아닌 경우 0으로 설정
+    days=$(echo $days | grep -E '^[0-9]+$' || echo "0")
+    hours=$(echo $hours | grep -E '^[0-9]+$' || echo "0")
+    minutes=$(echo $minutes | grep -E '^[0-9]+$' || echo "0")
     
     echo "{\"days\":$days,\"hours\":$hours,\"minutes\":$minutes}"
 }
