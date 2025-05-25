@@ -5,18 +5,21 @@ set -e
 
 # 필요한 명령어 확인
 check_command() {
-    if ! command -v $1 &> /dev/null; then
-        echo "Error: $1 is not installed" >&2
+    if ! command -v "$1" &> /dev/null; then
+        echo "Error: $1 is required but not installed." >&2
         exit 1
     fi
 }
 
 # 기본 명령어 확인
-check_command top
-check_command free
-check_command df
-check_command ip
-check_command ps
+check_command "top"
+check_command "free"
+check_command "df"
+check_command "ip"
+check_command "ps"
+check_command "ping"
+check_command "sensors"
+check_command "uptime"
 
 # 이전 네트워크 통계 저장 파일
 NET_STATS_FILE="/tmp/network_stats.txt"
@@ -25,12 +28,7 @@ NET_STATS_FILE="/tmp/network_stats.txt"
 get_cpu_info() {
     local cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}')
     local cpu_cores=$(nproc)
-    local cpu_temp=0
-    
-    # CPU 온도 확인 (sensors 명령어가 있는 경우)
-    if command -v sensors &> /dev/null; then
-        cpu_temp=$(sensors | grep "Core 0" | awk '{print $3}' | sed 's/+//' | sed 's/°C//')
-    fi
+    local cpu_temp=$(sensors | grep "Package id 0" | awk '{print $4}' | sed 's/+//' | sed 's/°C//')
     
     echo "{\"usage\":$cpu_usage,\"cores\":$cpu_cores,\"temperature\":$cpu_temp}"
 }
@@ -94,48 +92,18 @@ get_network_info() {
 
 # 온도 정보 수집
 get_temperature() {
-    local cpu_temp=0
-    local gpu_temp=0
-    local mb_temp=0
-    
-    if command -v sensors &> /dev/null; then
-        # CPU 온도
-        cpu_temp=$(sensors | grep "Core 0" | awk '{print $3}' | sed 's/+//' | sed 's/°C//' || echo "0")
-        
-        # GPU 온도 (NVIDIA)
-        if command -v nvidia-smi &> /dev/null; then
-            gpu_temp=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader || echo "0")
-        fi
-        
-        # 메인보드 온도
-        mb_temp=$(sensors | grep "temp1" | awk '{print $2}' | sed 's/+//' | sed 's/°C//' || echo "0")
-    fi
+    local cpu_temp=$(sensors | grep "Package id 0" | awk '{print $4}' | sed 's/+//' | sed 's/°C//')
+    local gpu_temp=$(sensors | grep "edge" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
+    local mb_temp=$(sensors | grep "temp1" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
     
     echo "{\"cpu\":$cpu_temp,\"gpu\":$gpu_temp,\"motherboard\":$mb_temp}"
 }
 
 # 팬 속도 정보 수집
 get_fan_speed() {
-    local cpu_fan=0
-    local case_fan1=0
-    local case_fan2=0
-    
-    if command -v sensors &> /dev/null; then
-        # CPU 팬
-        if sensors | grep -q "fan1"; then
-            cpu_fan=$(sensors | grep "fan1" | awk '{print $2}' | grep -E '^[0-9]+$' || echo "0")
-        fi
-        
-        # 케이스 팬 1
-        if sensors | grep -q "fan2"; then
-            case_fan1=$(sensors | grep "fan2" | awk '{print $2}' | grep -E '^[0-9]+$' || echo "0")
-        fi
-        
-        # 케이스 팬 2
-        if sensors | grep -q "fan3"; then
-            case_fan2=$(sensors | grep "fan3" | awk '{print $2}' | grep -E '^[0-9]+$' || echo "0")
-        fi
-    fi
+    local cpu_fan=$(sensors | grep "fan1" | awk '{print $2}')
+    local case_fan1=$(sensors | grep "fan2" | awk '{print $2}')
+    local case_fan2=$(sensors | grep "fan3" | awk '{print $2}')
     
     echo "{\"cpu\":$cpu_fan,\"case1\":$case_fan1,\"case2\":$case_fan2}"
 }
@@ -148,12 +116,12 @@ get_processes() {
 
 # 시스템 가동 시간 수집
 get_uptime() {
-    local uptime_seconds=$(cat /proc/uptime | awk '{print $1}')
-    local days=$(echo "scale=0; $uptime_seconds/86400" | bc)
-    local hours=$(echo "scale=0; ($uptime_seconds%86400)/3600" | bc)
-    local minutes=$(echo "scale=0; ($uptime_seconds%3600)/60" | bc)
+    local uptime_info=$(uptime -p)
+    local uptime_days=$(echo "$uptime_info" | grep -o '[0-9]* day' | awk '{print $1}')
+    local uptime_hours=$(echo "$uptime_info" | grep -o '[0-9]* hour' | awk '{print $1}')
+    local uptime_minutes=$(echo "$uptime_info" | grep -o '[0-9]* minute' | awk '{print $1}')
     
-    echo "{\"days\":$days,\"hours\":$hours,\"minutes\":$minutes}"
+    echo "{\"days\":$uptime_days,\"hours\":$uptime_hours,\"minutes\":$uptime_minutes}"
 }
 
 # 메인 함수
