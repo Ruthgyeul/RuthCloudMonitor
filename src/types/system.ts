@@ -26,6 +26,10 @@ export interface ServerData {
         download: number;
         upload: number;
         ping: number;
+        errorRates: {
+            rx: string;
+            tx: string;
+        };
     };
     uptime: {
         days: number;

@@ -75,14 +75,19 @@ async function getNetworkInfo() {
         return {
             download: networkSpeed.download,
             upload: networkSpeed.upload,
-            ping: ping
+            ping: ping,
+            errorRates: networkSpeed.errorRates
         };
     } catch (error) {
         console.error('Error getting network info:', error);
         return {
             download: 0,
             upload: 0,
-            ping: 0
+            ping: 0,
+            errorRates: {
+                rx: '0.00',
+                tx: '0.00'
+            }
         };
     }
 }
