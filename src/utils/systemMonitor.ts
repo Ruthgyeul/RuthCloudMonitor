@@ -159,20 +159,41 @@ async function getFanSpeed(): Promise<FanInfo> {
 }
 
 async function getProcesses(): Promise<Process[]> {
-  // 20개 추출
-  const { stdout } = await execAsync('ps aux --sort=-%cpu | head -n 21 | tail -n 20');
-  return stdout.split('\n')
+  const { stdout } = await execAsync('ps aux --sort=-%cpu | head -n 31 | tail -n 30');
+  const processes = stdout.split('\n')
     .filter(line => line.trim())
     .map((line, index) => {
-      const [, , , cpu, mem, , , , , , ...nameParts] = line.trim().split(/\s+/);
-      return {
-        id: index + 1,
-        name: nameParts.join(' '),
-        cpu: parseFloat(cpu),
-        memory: parseFloat(mem),
-        status: 'running' // 기본값으로 'running' 설정
-      };
-    });
+      // Skip header line
+      if (line.includes('USER') || line.includes('PID')) {
+        return null;
+      }
+
+      const parts = line.trim().split(/\s+/);
+      if (parts.length < 11) {
+        console.warn(`Invalid process line format: ${line}`);
+        return null;
+      }
+
+      try {
+        // ps aux output fields:
+        // USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND
+        const [user, pid, cpu, mem, , , , , , , ...commandParts] = parts;
+        const command = commandParts.join(' ');
+
+        return {
+          id: index + 1,
+          name: command,
+          cpu: parseFloat(cpu),
+          memory: parseFloat(mem),
+          status: 'running' as 'running' | 'sleeping'
+        };
+      } catch (error) {
+        console.error(`Error parsing process line: ${line}`, error);
+        return null;
+      }
+    })
+    .filter((proc): proc is NonNullable<typeof proc> => proc !== null);
+  return processes;
 }
 
 async function getUptime(): Promise<UptimeInfo> {
