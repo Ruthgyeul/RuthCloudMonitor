@@ -11,60 +11,60 @@ class NetworkMonitor {
 
     async getNetworkInterface() {
         try {
-            // First try to get the default route interface
-            const { stdout: defaultRoute } = await execAsync('route -n get default | grep interface | awk \'{print $2}\'');
-            if (defaultRoute.trim()) {
-                return defaultRoute.trim();
+            // First try to get Ethernet interface
+            const { stdout: ethInterface } = await execAsync("ip link show | grep 'state UP' | grep 'enp' | awk -F': ' '{print $2}'");
+            if (ethInterface.trim()) {
+                return ethInterface.trim();
             }
-        } catch (error) {
-            console.log('Default route method failed, trying alternative methods...');
-        }
-
-        try {
-            // Try to get active network interfaces
-            const { stdout: interfaces } = await execAsync('networksetup -listallhardwareports | grep -A 1 "Wi-Fi\\|Ethernet" | grep "Device" | awk \'{print $2}\'');
-            const interfaceList = interfaces.split('\n').filter(Boolean);
             
-            // Return the first active interface
-            if (interfaceList.length > 0) {
-                return interfaceList[0].trim();
+            // Then try WiFi interface
+            const { stdout: wifiInterface } = await execAsync("ip link show | grep 'state UP' | grep 'wlp' | awk -F': ' '{print $2}'");
+            if (wifiInterface.trim()) {
+                return wifiInterface.trim();
             }
+            
+            // If no specific interface found, return the first UP interface
+            const { stdout: defaultInterface } = await execAsync("ip link show | grep 'state UP' | head -n 1 | awk -F': ' '{print $2}'");
+            return defaultInterface.trim();
         } catch (error) {
-            console.log('Hardware ports method failed, trying ifconfig...');
+            console.log('Error getting network interface:', error);
+            return 'lo'; // Return loopback as fallback
         }
-
-        try {
-            // Try to get interface from ifconfig
-            const { stdout: ifconfig } = await execAsync('ifconfig | grep -E "en[0-9]|eth[0-9]" | head -n 1 | awk \'{print $1}\'');
-            if (ifconfig.trim()) {
-                return ifconfig.trim();
-            }
-        } catch (error) {
-            console.log('ifconfig method failed, using fallback...');
-        }
-
-        // If all methods fail, return a default interface
-        console.log('Using fallback network interface');
-        return 'en0'; // Default to en0 which is common on macOS
     }
 
     async getNetworkStats() {
         try {
             const networkInterface = await this.getNetworkInterface();
+            
+            // Get network statistics using netstat
             const { stdout } = await execAsync(`netstat -i | grep ${networkInterface}`);
             const stats = stdout.split(/\s+/);
             
+            // netstat -i output format:
+            // Iface MTU RX-OK RX-ERR RX-DRP RX-OVR TX-OK TX-ERR TX-DRP TX-OVR Flg
             return {
                 interface: networkInterface,
-                bytesIn: parseInt(stats[3]),
-                bytesOut: parseInt(stats[7])
+                bytesIn: parseInt(stats[3] || '0'),  // RX-OK
+                bytesOut: parseInt(stats[7] || '0'),  // TX-OK
+                errors: {
+                    rx: parseInt(stats[4] || '0'),    // RX-ERR
+                    tx: parseInt(stats[8] || '0'),    // TX-ERR
+                    rxDrop: parseInt(stats[5] || '0'), // RX-DRP
+                    txDrop: parseInt(stats[9] || '0')  // TX-DRP
+                }
             };
         } catch (error) {
             console.error('Error getting network stats:', error);
             return {
                 interface: 'unknown',
                 bytesIn: 0,
-                bytesOut: 0
+                bytesOut: 0,
+                errors: {
+                    rx: 0,
+                    tx: 0,
+                    rxDrop: 0,
+                    txDrop: 0
+                }
             };
         }
     }
@@ -78,15 +78,29 @@ class NetworkMonitor {
             const downloadSpeed = (secondStats.bytesIn - firstStats.bytesIn) / 1024; // KB/s
             const uploadSpeed = (secondStats.bytesOut - firstStats.bytesOut) / 1024; // KB/s
             
+            // Calculate error rates
+            const rxErrorRate = ((secondStats.errors.rx - firstStats.errors.rx) / 
+                               (secondStats.bytesIn - firstStats.bytesIn)) * 100 || 0;
+            const txErrorRate = ((secondStats.errors.tx - firstStats.errors.tx) / 
+                               (secondStats.bytesOut - firstStats.bytesOut)) * 100 || 0;
+            
             return {
                 download: Math.round(downloadSpeed),
-                upload: Math.round(uploadSpeed)
+                upload: Math.round(uploadSpeed),
+                errorRates: {
+                    rx: rxErrorRate.toFixed(2),
+                    tx: txErrorRate.toFixed(2)
+                }
             };
         } catch (error) {
             console.error('Error getting network speed:', error);
             return {
                 download: 0,
-                upload: 0
+                upload: 0,
+                errorRates: {
+                    rx: '0.00',
+                    tx: '0.00'
+                }
             };
         }
     }
