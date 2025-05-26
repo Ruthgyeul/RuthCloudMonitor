@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
-import { ServerData, Process } from '@/types/system';
+import { ServerData, Process, X86TemperatureInfo, ARMTemperatureInfo, TemperatureValue, TemperatureInfo, isX86TemperatureInfo, isARMTemperatureInfo } from '@/types/system';
 
 const execAsync = promisify(exec);
 
@@ -42,12 +42,6 @@ interface NetworkInfo {
     rx: string;
     tx: string;
   };
-}
-
-interface TemperatureInfo {
-  cpu: number | 'N/A';
-  gpu: number | 'N/A';
-  motherboard: number | 'N/A';
 }
 
 interface FanInfo {
@@ -95,7 +89,7 @@ async function getCpuInfo(): Promise<CpuInfo> {
                 temp = parseFloat(x86Temp.trim());
             }
         } else {
-            const { stdout: armTemp } = await execAsync('sensors | grep "cpu_thermal" -A 1 | grep "temp1" | awk \'{print $2}\' | sed \'s/+//\' | sed \'s/°C//\'');
+            const { stdout: armTemp } = await execAsync('sensors | grep "cpu_thermal" | grep "temp1" | awk \'{print $2}\' | sed \'s/+//\' | sed \'s/°C//\'');
             if (armTemp.trim()) {
                 temp = parseFloat(armTemp.trim());
             }
@@ -172,9 +166,6 @@ async function getNetworkInfo(): Promise<NetworkInfo> {
 
 async function getTemperature(): Promise<TemperatureInfo> {
     const arch = await getArchitecture();
-    let cpuTemp: number | 'N/A' = 'N/A';
-    let gpuTemp: number | 'N/A' = 'N/A';
-    let mbTemp: number | 'N/A' = 'N/A';
     
     try {
         const { stdout } = await execAsync('sensors');
@@ -184,27 +175,45 @@ async function getTemperature(): Promise<TemperatureInfo> {
             const gpuMatch = stdout.match(/edge:\s+\+(\d+\.\d+)°C/);
             const mbMatch = stdout.match(/temp1:\s+\+(\d+\.\d+)°C/);
             
-            if (cpuMatch) cpuTemp = parseFloat(cpuMatch[1]);
-            if (gpuMatch) gpuTemp = parseFloat(gpuMatch[1]);
-            if (mbMatch) mbTemp = parseFloat(mbMatch[1]);
+            const x86Temp: X86TemperatureInfo = {
+                cpu: cpuMatch ? parseFloat(cpuMatch[1]) : 'N/A',
+                gpu: gpuMatch ? parseFloat(gpuMatch[1]) : 'N/A',
+                motherboard: mbMatch ? parseFloat(mbMatch[1]) : 'N/A'
+            };
+            return x86Temp;
         } else {
-            const cpuMatch = stdout.match(/cpu_thermal.*temp1:\s+\+(\d+\.\d+)°C/);
-            const gpuMatch = stdout.match(/gpu_thermal.*temp1:\s+\+(\d+\.\d+)°C/);
-            const mbMatch = stdout.match(/rp1_adc.*temp1:\s+\+(\d+\.\d+)°C/);
+            // ARM 아키텍처 (Raspberry Pi 등)
+            const cpuMatch = stdout.match(/cpu_thermal-virtual-0.*temp1:\s+\+(\d+\.\d+)°C/);
+            const rp1Match = stdout.match(/rp1_adc-isa-0000.*temp1:\s+\+(\d+\.\d+)°C/);
+            const ssdMatch = stdout.match(/nvme-pci-0100.*Composite:\s+\+(\d+\.\d+)°C/);
             
-            if (cpuMatch) cpuTemp = parseFloat(cpuMatch[1]);
-            if (gpuMatch) gpuTemp = parseFloat(gpuMatch[1]);
-            if (mbMatch) mbTemp = parseFloat(mbMatch[1]);
+            const armTemp: ARMTemperatureInfo = {
+                cpu: cpuMatch ? parseFloat(cpuMatch[1]) : 'N/A',
+                rp1: rp1Match ? parseFloat(rp1Match[1]) : 'N/A',
+                ssd: ssdMatch ? parseFloat(ssdMatch[1]) : 'N/A'
+            };
+            return armTemp;
         }
     } catch (error) {
         console.warn('Failed to get temperature information:', error);
+        
+        // 에러 발생 시 기본값 반환
+        if (arch === 'x86') {
+            const x86Temp: X86TemperatureInfo = {
+                cpu: 'N/A' as TemperatureValue,
+                gpu: 'N/A' as TemperatureValue,
+                motherboard: 'N/A' as TemperatureValue
+            };
+            return x86Temp;
+        } else {
+            const armTemp: ARMTemperatureInfo = {
+                cpu: 'N/A' as TemperatureValue,
+                rp1: 'N/A' as TemperatureValue,
+                ssd: 'N/A' as TemperatureValue
+            };
+            return armTemp;
+        }
     }
-    
-    return {
-        cpu: cpuTemp,
-        gpu: gpuTemp,
-        motherboard: mbTemp
-    };
 }
 
 async function getFanSpeed(): Promise<FanInfo> {

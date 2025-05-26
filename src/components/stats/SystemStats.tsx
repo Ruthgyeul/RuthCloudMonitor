@@ -1,6 +1,6 @@
 import React from 'react';
 import { Clock, Thermometer, Fan, Wifi } from 'lucide-react';
-import { ServerData } from '@/types/system';
+import { ServerData, X86TemperatureInfo, ARMTemperatureInfo, isX86TemperatureInfo } from '@/types/system';
 import { formatNumber, formatTemperature } from '@/utils/numberFormat';
 
 interface SystemStatsProps {
@@ -8,9 +8,17 @@ interface SystemStatsProps {
 }
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
-    const formatTemp = (temp: number | 'N/A'): string => {
+    const formatTemp = (temp: number | 'N/A') => {
         if (temp === 'N/A') return 'N/A';
-        return `${formatTemperature(temp)}°C`;
+        return `${temp.toFixed(1)}°C`;
+    };
+
+    const getTempColor = (temp: number | 'N/A') => {
+        if (temp === 'N/A') return 'text-gray-400';
+        if (temp <= 50) return 'text-green-400';
+        if (temp <= 65) return 'text-yellow-400';
+        if (temp <= 74) return 'text-orange-400';
+        return 'text-red-400';
     };
 
     return (
@@ -34,24 +42,58 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
                     <span className="text-xs text-gray-300">TEMP</span>
                 </div>
                 <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">CPU</span>
-                        <span className="text-red-400 font-mono">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <span className="text-sm text-gray-600">CPU</span>
+                        </div>
+                        <span className={`text-sm font-medium ${getTempColor(serverData.temperature.cpu)}`}>
                             {formatTemp(serverData.temperature.cpu)}
                         </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">GPU</span>
-                        <span className="text-red-400 font-mono">
-                            {formatTemp(serverData.temperature.gpu)}
-                        </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">MB</span>
-                        <span className="text-red-400 font-mono">
-                            {formatTemp(serverData.temperature.motherboard)}
-                        </span>
-                    </div>
+                    {isX86TemperatureInfo(serverData.temperature) ? (
+                        <>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                    <span className="text-sm text-gray-600">GPU</span>
+                                </div>
+                                <span className={`text-sm font-medium ${getTempColor(serverData.temperature.gpu)}`}>
+                                    {formatTemp(serverData.temperature.gpu)}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    <span className="text-sm text-gray-600">MB</span>
+                                </div>
+                                <span className={`text-sm font-medium ${getTempColor(serverData.temperature.motherboard)}`}>
+                                    {formatTemp(serverData.temperature.motherboard)}
+                                </span>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                    <span className="text-sm text-gray-600">RP1</span>
+                                </div>
+                                <span className={`text-sm font-medium ${getTempColor(serverData.temperature.rp1)}`}>
+                                    {formatTemp(serverData.temperature.rp1)}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    <span className="text-sm text-gray-600">SSD</span>
+                                </div>
+                                <span className={`text-sm font-medium ${getTempColor(serverData.temperature.ssd)}`}>
+                                    {formatTemp(serverData.temperature.ssd)}
+                                </span>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 

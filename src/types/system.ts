@@ -6,11 +6,40 @@ export interface Process {
     status: 'running' | 'sleeping';
 }
 
+// 온도 값 타입
+export type TemperatureValue = number | 'N/A';
+
+// x86 아키텍처용 온도 정보
+export interface X86TemperatureInfo {
+    cpu: TemperatureValue;
+    gpu: TemperatureValue;
+    motherboard: TemperatureValue;
+}
+
+// ARM 아키텍처용 온도 정보
+export interface ARMTemperatureInfo {
+    cpu: TemperatureValue;
+    rp1: TemperatureValue;
+    ssd: TemperatureValue;
+}
+
+// 온도 정보 (아키텍처별)
+export type TemperatureInfo = X86TemperatureInfo | ARMTemperatureInfo;
+
+// 온도 정보 타입 가드
+export function isX86TemperatureInfo(temp: TemperatureInfo): temp is X86TemperatureInfo {
+    return 'gpu' in temp && 'motherboard' in temp;
+}
+
+export function isARMTemperatureInfo(temp: TemperatureInfo): temp is ARMTemperatureInfo {
+    return 'rp1' in temp && 'ssd' in temp;
+}
+
 export interface ServerData {
     cpu: {
         usage: number;
         cores: number;
-        temperature: number | 'N/A';
+        temperature: TemperatureValue;
     };
     memory: {
         used: number;
@@ -36,11 +65,7 @@ export interface ServerData {
         hours: number;
         minutes: number;
     };
-    temperature: {
-        cpu: number | 'N/A';
-        gpu: number | 'N/A';
-        motherboard: number | 'N/A';
-    };
+    temperature: TemperatureInfo;
     fan: {
         cpu: number;
         case1: number;

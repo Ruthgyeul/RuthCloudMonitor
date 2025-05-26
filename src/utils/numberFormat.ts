@@ -1,4 +1,12 @@
-import { ServerData, Process } from '@/types/system';
+import { 
+    ServerData, 
+    Process, 
+    X86TemperatureInfo, 
+    ARMTemperatureInfo, 
+    TemperatureInfo,
+    isX86TemperatureInfo,
+    isARMTemperatureInfo
+} from '@/types/system';
 
 export const formatNumber = (num: number): number => {
     return Number(num.toFixed(2));
@@ -50,10 +58,14 @@ export const formatServerData = (data: ServerData): ServerData => {
             hours: data.uptime.hours,
             minutes: data.uptime.minutes
         },
-        temperature: {
+        temperature: isX86TemperatureInfo(data.temperature) ? {
             cpu: formatTemperature(data.temperature.cpu),
             gpu: formatTemperature(data.temperature.gpu),
             motherboard: formatTemperature(data.temperature.motherboard)
+        } : {
+            cpu: formatTemperature(data.temperature.cpu),
+            rp1: formatTemperature(data.temperature.rp1),
+            ssd: formatTemperature(data.temperature.ssd)
         },
         fan: {
             cpu: formatNumber(data.fan.cpu),
