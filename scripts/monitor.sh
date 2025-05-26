@@ -24,11 +24,30 @@ check_command "uptime"
 # 이전 네트워크 통계 저장 파일
 NET_STATS_FILE="/tmp/network_stats.txt"
 
+# 아키텍처 감지
+get_architecture() {
+    local arch=$(uname -m)
+    if [[ $arch == "x86_64" || $arch == "i686" ]]; then
+        echo "x86"
+    elif [[ $arch == "aarch64" || $arch == "armv7l" ]]; then
+        echo "arm"
+    else
+        echo "unknown"
+    fi
+}
+
 # CPU 정보 수집
 get_cpu_info() {
     local cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}')
     local cpu_cores=$(nproc)
-    local cpu_temp=$(sensors | grep "Package id 0" | awk '{print $4}' | sed 's/+//' | sed 's/°C//')
+    local arch=$(get_architecture)
+    local cpu_temp
+    
+    if [[ $arch == "x86" ]]; then
+        cpu_temp=$(sensors | grep "Package id 0" | awk '{print $4}' | sed 's/+//' | sed 's/°C//')
+    else
+        cpu_temp=$(sensors | grep "cpu_thermal" -A 1 | grep "temp1" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
+    fi
     
     echo "{\"usage\":$cpu_usage,\"cores\":$cpu_cores,\"temperature\":$cpu_temp}"
 }
@@ -92,9 +111,20 @@ get_network_info() {
 
 # 온도 정보 수집
 get_temperature() {
-    local cpu_temp=$(sensors | grep "Package id 0" | awk '{print $4}' | sed 's/+//' | sed 's/°C//')
-    local gpu_temp=$(sensors | grep "edge" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
-    local mb_temp=$(sensors | grep "temp1" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
+    local arch=$(get_architecture)
+    local cpu_temp
+    local gpu_temp
+    local mb_temp
+    
+    if [[ $arch == "x86" ]]; then
+        cpu_temp=$(sensors | grep "Package id 0" | awk '{print $4}' | sed 's/+//' | sed 's/°C//')
+        gpu_temp=$(sensors | grep "edge" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
+        mb_temp=$(sensors | grep "temp1" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
+    else
+        cpu_temp=$(sensors | grep "cpu_thermal" -A 1 | grep "temp1" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
+        gpu_temp=$(sensors | grep "gpu_thermal" -A 1 | grep "temp1" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
+        mb_temp=$(sensors | grep "rp1_adc" -A 1 | grep "temp1" | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
+    fi
     
     echo "{\"cpu\":$cpu_temp,\"gpu\":$gpu_temp,\"motherboard\":$mb_temp}"
 }

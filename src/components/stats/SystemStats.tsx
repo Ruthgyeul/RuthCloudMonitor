@@ -1,64 +1,87 @@
 import React from 'react';
 import { Clock, Thermometer, Fan, Wifi } from 'lucide-react';
 import { ServerData } from '@/types/system';
-import { formatNumber } from '@/utils/numberFormat';
+import { formatNumber, formatTemperature } from '@/utils/numberFormat';
 
 interface SystemStatsProps {
     serverData: ServerData;
 }
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
+    const formatTemp = (temp: number | 'N/A'): string => {
+        if (temp === 'N/A') return 'N/A';
+        return `${formatTemperature(temp)}°C`;
+    };
+
     return (
-        <div className="col-span-1 space-y-3">
-            {/* Uptime */}
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                <div className="flex items-center mb-2">
-                    <Clock className="h-4 w-4 text-green-400 mr-2" />
-                    <span className="text-xs text-gray-300">UPTIME</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                    <Clock className="w-5 h-5 text-blue-400" />
+                    <h3 className="text-lg font-semibold text-white">Uptime</h3>
                 </div>
-                <div className="text-lg font-bold text-white">
-                    {serverData.uptime.days}d {serverData.uptime.hours}h
+                <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">Days</span>
+                        <span className="text-blue-400 font-mono">{serverData.uptime.days}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">Hours</span>
+                        <span className="text-blue-400 font-mono">{serverData.uptime.hours}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">Minutes</span>
+                        <span className="text-blue-400 font-mono">{serverData.uptime.minutes}</span>
+                    </div>
                 </div>
-                <div className="text-xs text-gray-400">{serverData.uptime.minutes}m</div>
             </div>
 
-            {/* Temperature */}
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                <div className="flex items-center mb-2">
-                    <Thermometer className="h-4 w-4 text-orange-400 mr-2" />
-                    <span className="text-xs text-gray-300">TEMP</span>
+            <div className="bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                    <Thermometer className="w-5 h-5 text-red-400" />
+                    <h3 className="text-lg font-semibold text-white">Temperature</h3>
                 </div>
-                <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
+                <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
                         <span className="text-gray-400">CPU</span>
-                        <span className={`font-mono ${serverData.temperature.cpu > 70 ? 'text-red-400' : serverData.temperature.cpu > 60 ? 'text-yellow-400' : 'text-green-400'}`}>
-                            {serverData.temperature.cpu}°C
-                        </span>
+                        <span className="text-red-400 font-mono">{formatTemp(serverData.temperature.cpu)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between">
                         <span className="text-gray-400">GPU</span>
-                        <span className={`font-mono ${serverData.temperature.gpu > 80 ? 'text-red-400' : serverData.temperature.gpu > 70 ? 'text-yellow-400' : 'text-green-400'}`}>
-                            {serverData.temperature.gpu}°C
-                        </span>
+                        <span className="text-red-400 font-mono">{formatTemp(serverData.temperature.gpu)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">MB</span>
+                        <span className="text-red-400 font-mono">{formatTemp(serverData.temperature.motherboard)}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Fan Speed */}
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                <div className="flex items-center mb-2">
-                    <Fan className="h-4 w-4 text-purple-400 mr-2" />
-                    <span className="text-xs text-gray-300">FAN</span>
+            <div className="bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                    <Fan className="w-5 h-5 text-green-400" />
+                    <h3 className="text-lg font-semibold text-white">Fan Speed</h3>
                 </div>
-                <div className="text-lg font-bold text-white">{serverData.fan.cpu}</div>
-                <div className="text-xs text-gray-400">RPM</div>
+                <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">CPU</span>
+                        <span className="text-green-400 font-mono">{formatNumber(serverData.fan.cpu)} RPM</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">Case 1</span>
+                        <span className="text-green-400 font-mono">{formatNumber(serverData.fan.case1)} RPM</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">Case 2</span>
+                        <span className="text-green-400 font-mono">{formatNumber(serverData.fan.case2)} RPM</span>
+                    </div>
+                </div>
             </div>
 
-            {/* Network Info */}
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                <div className="flex items-center mb-2">
-                    <Wifi className="h-4 w-4 text-blue-400 mr-2" />
-                    <span className="text-xs text-gray-300">NETWORK</span>
+            <div className="bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                    <Wifi className="w-5 h-5 text-yellow-400" />
+                    <h3 className="text-lg font-semibold text-white">Network</h3>
                 </div>
                 <div className="space-y-1 text-xs">
                     <div className="flex justify-between">

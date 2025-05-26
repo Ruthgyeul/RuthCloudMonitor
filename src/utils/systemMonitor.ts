@@ -10,6 +10,7 @@ let cachedData: ServerData | null = null;
 let lastUpdateTime = 0;
 const UPDATE_INTERVAL = 1000; // 1초마다 업데이트
 let isUpdating = false; // 업데이트 중복 방지
+let cachedArchitecture: 'x86' | 'arm' | 'unknown' | null = null; // 아키텍처 캐시
 
 // 네트워크 통계 저장
 let prevRxBytes = 0;
@@ -18,7 +19,7 @@ let prevTxBytes = 0;
 interface CpuInfo {
   usage: number;
   cores: number;
-  temperature: number;
+  temperature: number | 'N/A';
 }
 
 interface MemoryInfo {
@@ -44,9 +45,9 @@ interface NetworkInfo {
 }
 
 interface TemperatureInfo {
-  cpu: number;
-  gpu: number;
-  motherboard: number;
+  cpu: number | 'N/A';
+  gpu: number | 'N/A';
+  motherboard: number | 'N/A';
 }
 
 interface FanInfo {
@@ -61,16 +62,53 @@ interface UptimeInfo {
   minutes: number;
 }
 
+// 아키텍처 감지 함수
+async function getArchitecture(): Promise<'x86' | 'arm' | 'unknown'> {
+    if (cachedArchitecture !== null) {
+        return cachedArchitecture;
+    }
+    
+    const { stdout } = await execAsync('uname -m');
+    const arch = stdout.trim();
+    
+    if (arch === 'x86_64' || arch === 'i686') {
+        cachedArchitecture = 'x86';
+    } else if (arch === 'aarch64' || arch === 'armv7l') {
+        cachedArchitecture = 'arm';
+    } else {
+        cachedArchitecture = 'unknown';
+    }
+    
+    return cachedArchitecture;
+}
+
 async function getCpuInfo(): Promise<CpuInfo> {
-  const { stdout } = await execAsync('top -bn1 | grep "Cpu(s)" | awk \'{print $2}\'');
-  const { stdout: cores } = await execAsync('nproc');
-  const { stdout: temp } = await execAsync('sensors | grep "Package id 0" | awk \'{print $4}\' | sed \'s/+//\' | sed \'s/°C//\'');
-  
-  return {
-    usage: parseFloat(stdout.trim()),
-    cores: parseInt(cores.trim()),
-    temperature: parseFloat(temp.trim())
-  };
+    const { stdout } = await execAsync('top -bn1 | grep "Cpu(s)" | awk \'{print $2}\'');
+    const { stdout: cores } = await execAsync('nproc');
+    const arch = await getArchitecture();
+    
+    let temp: number | 'N/A' = 'N/A';
+    try {
+        if (arch === 'x86') {
+            const { stdout: x86Temp } = await execAsync('sensors | grep "Package id 0" | awk \'{print $4}\' | sed \'s/+//\' | sed \'s/°C//\'');
+            if (x86Temp.trim()) {
+                temp = parseFloat(x86Temp.trim());
+            }
+        } else {
+            const { stdout: armTemp } = await execAsync('sensors | grep "cpu_thermal" -A 1 | grep "temp1" | awk \'{print $2}\' | sed \'s/+//\' | sed \'s/°C//\'');
+            if (armTemp.trim()) {
+                temp = parseFloat(armTemp.trim());
+            }
+        }
+    } catch (error) {
+        console.warn('Failed to get CPU temperature:', error);
+    }
+    
+    return {
+        usage: parseFloat(stdout.trim()),
+        cores: parseInt(cores.trim()),
+        temperature: temp
+    };
 }
 
 async function getMemoryInfo(): Promise<MemoryInfo> {
@@ -133,16 +171,40 @@ async function getNetworkInfo(): Promise<NetworkInfo> {
 }
 
 async function getTemperature(): Promise<TemperatureInfo> {
-  const { stdout } = await execAsync('sensors');
-  const cpuTemp = stdout.match(/Package id 0:\s+\+(\d+\.\d+)°C/)?.[1] || '0';
-  const gpuTemp = stdout.match(/edge:\s+\+(\d+\.\d+)°C/)?.[1] || '0';
-  const mbTemp = stdout.match(/temp1:\s+\+(\d+\.\d+)°C/)?.[1] || '0';
-  
-  return {
-    cpu: parseFloat(cpuTemp),
-    gpu: parseFloat(gpuTemp),
-    motherboard: parseFloat(mbTemp)
-  };
+    const arch = await getArchitecture();
+    let cpuTemp: number | 'N/A' = 'N/A';
+    let gpuTemp: number | 'N/A' = 'N/A';
+    let mbTemp: number | 'N/A' = 'N/A';
+    
+    try {
+        const { stdout } = await execAsync('sensors');
+        
+        if (arch === 'x86') {
+            const cpuMatch = stdout.match(/Package id 0:\s+\+(\d+\.\d+)°C/);
+            const gpuMatch = stdout.match(/edge:\s+\+(\d+\.\d+)°C/);
+            const mbMatch = stdout.match(/temp1:\s+\+(\d+\.\d+)°C/);
+            
+            if (cpuMatch) cpuTemp = parseFloat(cpuMatch[1]);
+            if (gpuMatch) gpuTemp = parseFloat(gpuMatch[1]);
+            if (mbMatch) mbTemp = parseFloat(mbMatch[1]);
+        } else {
+            const cpuMatch = stdout.match(/cpu_thermal.*temp1:\s+\+(\d+\.\d+)°C/);
+            const gpuMatch = stdout.match(/gpu_thermal.*temp1:\s+\+(\d+\.\d+)°C/);
+            const mbMatch = stdout.match(/rp1_adc.*temp1:\s+\+(\d+\.\d+)°C/);
+            
+            if (cpuMatch) cpuTemp = parseFloat(cpuMatch[1]);
+            if (gpuMatch) gpuTemp = parseFloat(gpuMatch[1]);
+            if (mbMatch) mbTemp = parseFloat(mbMatch[1]);
+        }
+    } catch (error) {
+        console.warn('Failed to get temperature information:', error);
+    }
+    
+    return {
+        cpu: cpuTemp,
+        gpu: gpuTemp,
+        motherboard: mbTemp
+    };
 }
 
 async function getFanSpeed(): Promise<FanInfo> {
@@ -306,7 +368,7 @@ export async function getSystemInfo(): Promise<ServerData> {
 // 기본 서버 데이터
 function getDefaultServerData(): ServerData {
     return {
-        cpu: { usage: 0, cores: 0, temperature: 0 },
+        cpu: { usage: 0, cores: 0, temperature: 'N/A' },
         memory: { used: 0, total: 0, percentage: 0 },
         disk: { used: 0, total: 0, percentage: 0 },
         network: { 
@@ -319,7 +381,7 @@ function getDefaultServerData(): ServerData {
             }
         },
         uptime: { days: 0, hours: 0, minutes: 0 },
-        temperature: { cpu: 0, gpu: 0, motherboard: 0 },
+        temperature: { cpu: 'N/A', gpu: 'N/A', motherboard: 'N/A' },
         fan: { cpu: 0, case1: 0, case2: 0 },
         processes: []
     };

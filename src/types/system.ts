@@ -10,7 +10,7 @@ export interface ServerData {
     cpu: {
         usage: number;
         cores: number;
-        temperature: number;
+        temperature: number | 'N/A';
     };
     memory: {
         used: number;
@@ -37,9 +37,9 @@ export interface ServerData {
         minutes: number;
     };
     temperature: {
-        cpu: number;
-        gpu: number;
-        motherboard: number;
+        cpu: number | 'N/A';
+        gpu: number | 'N/A';
+        motherboard: number | 'N/A';
     };
     fan: {
         cpu: number;

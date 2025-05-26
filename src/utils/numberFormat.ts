@@ -4,6 +4,11 @@ export const formatNumber = (num: number): number => {
     return Number(num.toFixed(2));
 };
 
+export const formatTemperature = (temp: number | 'N/A'): number | 'N/A' => {
+    if (temp === 'N/A') return 'N/A';
+    return Number(temp.toFixed(2));
+};
+
 type FormattableValue = number | string | boolean | null | FormattableObject | FormattableArray;
 interface FormattableObject {
     [key: string]: FormattableValue;
@@ -19,7 +24,7 @@ export const formatServerData = (data: ServerData): ServerData => {
         cpu: {
             usage: formatNumber(data.cpu.usage),
             cores: data.cpu.cores,
-            temperature: formatNumber(data.cpu.temperature)
+            temperature: formatTemperature(data.cpu.temperature)
         },
         memory: {
             used: formatNumber(data.memory.used),
@@ -46,9 +51,9 @@ export const formatServerData = (data: ServerData): ServerData => {
             minutes: data.uptime.minutes
         },
         temperature: {
-            cpu: formatNumber(data.temperature.cpu),
-            gpu: formatNumber(data.temperature.gpu),
-            motherboard: formatNumber(data.temperature.motherboard)
+            cpu: formatTemperature(data.temperature.cpu),
+            gpu: formatTemperature(data.temperature.gpu),
+            motherboard: formatTemperature(data.temperature.motherboard)
         },
         fan: {
             cpu: formatNumber(data.fan.cpu),
