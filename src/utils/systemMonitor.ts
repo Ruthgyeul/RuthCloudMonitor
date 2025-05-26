@@ -183,9 +183,9 @@ async function getTemperature(): Promise<TemperatureInfo> {
             return x86Temp;
         } else {
             // ARM 아키텍처 (Raspberry Pi 등)
-            const cpuMatch = stdout.match(/cpu_thermal-virtual-0.*temp1:\s*\+(\d+\.\d+)°C/);
-            const rp1Match = stdout.match(/rp1_adc-isa-0000.*temp1:\s*\+(\d+\.\d+)°C/);
-            const ssdMatch = stdout.match(/nvme-pci-0100.*Composite:\s*\+(\d+\.\d+)°C/);
+            const cpuMatch = stdout.match(/cpu_thermal-virtual-0[\s\S]*?temp1:\s*\+?([\d.]+)°C/);
+            const rp1Match = stdout.match(/rp1_adc-isa-0000[\s\S]*?temp1:\s*\+?([\d.]+)°C/);
+            const ssdMatch = stdout.match(/nvme-pci-0100[\s\S]*?Composite:\s*\+?([\d.]+)°C/);
             
             const armTemp: ARMTemperatureInfo = {
                 cpu: cpuMatch ? parseFloat(cpuMatch[1]) : 'N/A',
