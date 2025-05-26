@@ -42,7 +42,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
                     <span className="text-xs text-gray-300">TEMP</span>
                 </div>
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex justify-between gap-2">
                         <div className="flex items-center gap-1">
                             <div className="w-2 h-2 rounded-full bg-emerald-500" />
                             <span className="text-sm text-gray-600">CPU</span>
@@ -53,7 +53,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
                     </div>
                     {isX86TemperatureInfo(serverData.temperature) ? (
                         <>
-                            <div className="flex items-center gap-2">
+                            <div className="flex justify-between gap-2">
                                 <div className="flex items-center gap-1">
                                     <div className="w-2 h-2 rounded-full bg-blue-500" />
                                     <span className="text-sm text-gray-600">GPU</span>
@@ -62,7 +62,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
                                     {formatTemp(serverData.temperature.gpu)}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex justify-between gap-2">
                                 <div className="flex items-center gap-1">
                                     <div className="w-2 h-2 rounded-full bg-purple-500" />
                                     <span className="text-sm text-gray-600">MB</span>
