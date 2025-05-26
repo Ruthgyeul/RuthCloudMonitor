@@ -45,7 +45,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
                     <div className="flex justify-between gap-2">
                         <div className="flex items-center gap-1">
                             <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                            <span className="text-sm text-gray-600">CPU</span>
+                            <span className="text-sm text-gray-400">CPU</span>
                         </div>
                         <span className={`text-sm font-medium ${getTempColor(serverData.temperature.cpu)}`}>
                             {formatTemp(serverData.temperature.cpu)}
@@ -56,7 +56,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
                             <div className="flex justify-between gap-2">
                                 <div className="flex items-center gap-1">
                                     <div className="w-2 h-2 rounded-full bg-blue-500" />
-                                    <span className="text-sm text-gray-600">GPU</span>
+                                    <span className="text-sm text-gray-400">GPU</span>
                                 </div>
                                 <span className={`text-sm font-medium ${getTempColor(serverData.temperature.gpu)}`}>
                                     {formatTemp(serverData.temperature.gpu)}
@@ -65,7 +65,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
                             <div className="flex justify-between gap-2">
                                 <div className="flex items-center gap-1">
                                     <div className="w-2 h-2 rounded-full bg-purple-500" />
-                                    <span className="text-sm text-gray-600">MB</span>
+                                    <span className="text-sm text-gray-400">MB</span>
                                 </div>
                                 <span className={`text-sm font-medium ${getTempColor(serverData.temperature.motherboard)}`}>
                                     {formatTemp(serverData.temperature.motherboard)}
@@ -74,19 +74,19 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ serverData }) => {
                         </>
                     ) : (
                         <>
-                            <div className="flex items-center gap-2">
+                            <div className="flex justify-between gap-2">
                                 <div className="flex items-center gap-1">
                                     <div className="w-2 h-2 rounded-full bg-blue-500" />
-                                    <span className="text-sm text-gray-600">RP1</span>
+                                    <span className="text-sm text-gray-400">RP1</span>
                                 </div>
                                 <span className={`text-sm font-medium ${getTempColor(serverData.temperature.rp1)}`}>
                                     {formatTemp(serverData.temperature.rp1)}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex justify-between gap-2">
                                 <div className="flex items-center gap-1">
                                     <div className="w-2 h-2 rounded-full bg-purple-500" />
-                                    <span className="text-sm text-gray-600">SSD</span>
+                                    <span className="text-sm text-gray-400">SSD</span>
                                 </div>
                                 <span className={`text-sm font-medium ${getTempColor(serverData.temperature.ssd)}`}>
                                     {formatTemp(serverData.temperature.ssd)}
