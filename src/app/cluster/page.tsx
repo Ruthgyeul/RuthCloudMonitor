@@ -126,9 +126,7 @@ const ClusterPage = () => {
 
         for (const server of servers) {
             try {
-                const url = server.type === 'intel'
-                    ? `/api/system`
-                    : `https://${server.ip}/api/system`;
+                const url = `https://${server.ip}/api/system`;
 
                 const response = await fetch(url);
                 if (response.ok) {
