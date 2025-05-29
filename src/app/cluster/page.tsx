@@ -111,7 +111,7 @@ const ClusterPage = () => {
 
     useEffect(() => {
         fetchServerData();
-        const interval = setInterval(fetchServerData, 5000); // 5초마다 업데이트
+        const interval = setInterval(fetchServerData, 1000); // 1초마다 업데이트
         return () => clearInterval(interval);
     }, []);
 
@@ -163,6 +163,15 @@ const ClusterPage = () => {
         if (fan.case1 > 0) return `${fan.case1}RPM`;
         if (fan.case2 > 0) return `${fan.case2}RPM`;
         return null;
+    };
+
+    // 온도별 색상 반환 함수
+    const getTempColor = (temp: number | undefined): string => {
+        if (temp === undefined || temp === null) return 'text-gray-400';
+        if (temp <= 50) return 'text-green-400';
+        if (temp <= 65) return 'text-yellow-400';
+        if (temp <= 74) return 'text-orange-400';
+        return 'text-red-400';
     };
 
     interface PieChartProps {
@@ -252,70 +261,76 @@ const ClusterPage = () => {
                 {/* Main Stats Grid */}
                 <div className="grid grid-cols-2 gap-1 mb-2 flex-1">
                     {/* CPU */}
-                    <div className="bg-gray-900 rounded p-1.5">
+                    <div className="bg-gray-900 rounded p-1.5 flex flex-col">
                         <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center space-x-1">
                                 <Cpu className="w-3 h-3 text-blue-400" />
                                 <span className="text-xs text-gray-400">CPU</span>
                             </div>
                         </div>
-                        <div className="flex items-center justify-center">
-                            <PieChart
-                                percentage={cpu?.usage || 0}
-                                size={36}
-                                strokeWidth={3}
-                                color={getStatusColor(cpu?.usage || 0)}
-                            />
-                        </div>
-                        <div className="text-xs text-center text-gray-500 mt-1">
-                            {cpu?.cores || 0} cores
+                        <div className="flex-1 flex flex-col justify-center items-center">
+                            <div className="flex items-center justify-center">
+                                <PieChart
+                                    percentage={cpu?.usage || 0}
+                                    size={36}
+                                    strokeWidth={3}
+                                    color={getStatusColor(cpu?.usage || 0)}
+                                />
+                            </div>
+                            <div className="text-xs text-center text-gray-500 mt-1">
+                                {cpu?.cores || 0} cores
+                            </div>
                         </div>
                     </div>
 
                     {/* Memory */}
-                    <div className="bg-gray-900 rounded p-1.5">
+                    <div className="bg-gray-900 rounded p-1.5 flex flex-col">
                         <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center space-x-1">
                                 <MemoryStick className="w-3 h-3 text-purple-400" />
                                 <span className="text-xs text-gray-400">RAM</span>
                             </div>
                         </div>
-                        <div className="flex items-center justify-center">
-                            <PieChart
-                                percentage={memory?.percentage || 0}
-                                size={36}
-                                strokeWidth={3}
-                                color={getStatusColor(memory?.percentage || 0)}
-                            />
-                        </div>
-                        <div className="text-xs text-center text-gray-500 mt-1">
-                            {formatMemory(memory)}
+                        <div className="flex-1 flex flex-col justify-center items-center">
+                            <div className="flex items-center justify-center">
+                                <PieChart
+                                    percentage={memory?.percentage || 0}
+                                    size={36}
+                                    strokeWidth={3}
+                                    color={getStatusColor(memory?.percentage || 0)}
+                                />
+                            </div>
+                            <div className="text-xs text-center text-gray-500 mt-1">
+                                {formatMemory(memory)}
+                            </div>
                         </div>
                     </div>
 
                     {/* Disk */}
-                    <div className="bg-gray-900 rounded p-1.5">
+                    <div className="bg-gray-900 rounded p-1.5 flex flex-col">
                         <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center space-x-1">
                                 <HardDrive className="w-3 h-3 text-green-400" />
                                 <span className="text-xs text-gray-400">Disk</span>
                             </div>
                         </div>
-                        <div className="flex items-center justify-center">
-                            <PieChart
-                                percentage={disk?.percentage || 0}
-                                size={36}
-                                strokeWidth={3}
-                                color={getStatusColor(disk?.percentage || 0)}
-                            />
-                        </div>
-                        <div className="text-xs text-center text-gray-500 mt-1">
-                            {formatDisk(disk)}
+                        <div className="flex-1 flex flex-col justify-center items-center">
+                            <div className="flex items-center justify-center">
+                                <PieChart
+                                    percentage={disk?.percentage || 0}
+                                    size={36}
+                                    strokeWidth={3}
+                                    color={getStatusColor(disk?.percentage || 0)}
+                                />
+                            </div>
+                            <div className="text-xs text-center text-gray-500 mt-1">
+                                {formatDisk(disk)}
+                            </div>
                         </div>
                     </div>
 
                     {/* Network */}
-                    <div className="bg-gray-900 rounded p-1.5">
+                    <div className="bg-gray-900 rounded p-1.5 flex flex-col">
                         <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center space-x-1">
                                 <Network className="w-3 h-3 text-cyan-400" />
@@ -325,24 +340,31 @@ const ClusterPage = () => {
                                 {network?.ping?.toFixed(0) || 0}ms
                             </span>
                         </div>
-                        <div className="flex justify-between text-xs text-gray-500 mt-2">
-                            <span>↓{(network?.download || 0).toFixed(1)}</span>
-                            <span>↑{(network?.upload || 0).toFixed(1)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-600 mt-1">
-                            <span>RX:{network?.errorRates?.rx || '0.00'}%</span>
-                            <span>TX:{network?.errorRates?.tx || '0.00'}%</span>
+                        <div className="flex-1 flex flex-col justify-center items-center">
+                            <div className="text-xs text-gray-500">
+                                <span className="text-blue-400">↓ {(network?.download || 0).toFixed(1)}</span>
+                                <span className="mx-2">|</span>
+                                <span className="text-green-400">↑ {(network?.upload || 0).toFixed(1)}</span>
+                            </div>
+                            <div className="text-xs text-gray-600">
+                                <span>RX:{network?.errorRates?.rx || '0.00'}%</span>
+                                <span className="mx-2">|</span>
+                                <span>TX:{network?.errorRates?.tx || '0.00'}%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Bottom Info */}
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-700">
+                <div className="flex flex-col text-xs pt-1 border-t border-gray-700 gap-1">
                     <div className="flex items-center space-x-2">
                         {getTemperatureDisplay(temperature, server.type) && (
                             <div className="flex items-center space-x-1">
                                 <Thermometer className="w-3 h-3 text-red-400" />
-                                <span className="text-gray-400">{getTemperatureDisplay(temperature, server.type)}</span>
+                                <span className={getTempColor(
+                                    server.type === 'intel' ? temperature?.cpu :
+                                    temperature?.cpu || temperature?.rp1 || temperature?.ssd
+                                )}>{getTemperatureDisplay(temperature, server.type)}</span>
                             </div>
                         )}
                         {getFanSpeed(fan) && (
@@ -351,13 +373,13 @@ const ClusterPage = () => {
                                 <span className="text-gray-400">{getFanSpeed(fan)}</span>
                             </div>
                         )}
-                        {uptime && (
-                            <div className="flex items-center space-x-1">
-                                <Clock className="w-3 h-3 text-yellow-400" />
-                                <span className="text-gray-400">{formatUptime(uptime)}</span>
-                            </div>
-                        )}
                     </div>
+                    {uptime && (
+                        <div className="flex items-center space-x-1">
+                            <Clock className="w-3 h-3 text-yellow-400" />
+                            <span className="text-gray-400">{formatUptime(uptime)}</span>
+                        </div>
+                    )}
                     {topProcess && (
                         <div className="flex items-center space-x-1 max-w-20">
                             <Activity className="w-3 h-3 text-orange-400" />
