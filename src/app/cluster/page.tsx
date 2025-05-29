@@ -430,12 +430,12 @@ const ClusterPage = () => {
     }
 
     return (
-        <div className="h-screen flex flex-col">
+        <div className="min-h-screen bg-gray-900">
         {/* Header */}
         <Header error={null} />
-        <div className="bg-gray-900 p-2 flex flex-col overflow-hidden">
-            {/* Server Grid - Fill remaining space */}
-            <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
+        <div className="p-1 sm:p-2">
+            {/* Server Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 sm:gap-2 mb-1 sm:mb-2">
                 {servers.map((server) => (
                     <ServerCard
                         key={server.ip}
@@ -445,9 +445,9 @@ const ClusterPage = () => {
                 ))}
             </div>
 
-            {/* Network Summary - Compact bottom section */}
-            <div className="bg-gray-800 rounded-lg p-2 flex-shrink-0">
-                <div className="grid grid-cols-4 gap-2 text-center">
+            {/* Network Summary */}
+            <div className="bg-gray-800 rounded-lg p-1 sm:p-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 text-center">
                     {servers.map((server) => {
                         const data = serversData[server.ip];
                         const history = networkHistory[server.ip] || [];

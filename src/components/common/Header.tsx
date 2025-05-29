@@ -32,18 +32,18 @@ export const Header: React.FC<HeaderProps> = ({ error }) => {
   }, []);
 
   return (
-    <div className="h-12 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4">
-      <div className="flex items-center">
-        <Server className="h-5 w-5 text-blue-400 mr-2" />
-        <h1 className="text-lg font-bold">Server Monitor</h1>
-        <div className="ml-2 w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+    <div className="h-12 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-2 sm:px-4">
+      <div className="flex items-center min-w-0">
+        <Server className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0" />
+        <h1 className="text-base sm:text-lg font-bold truncate">Server Monitor</h1>
+        <div className="ml-2 w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0"></div>
       </div>
-      <div className="flex items-center space-x-4">
-        <div className="text-sm text-gray-300 font-mono">
+      <div className="flex items-center space-x-2 sm:space-x-4">
+        <div className="text-xs sm:text-sm text-gray-300 font-mono whitespace-nowrap">
           {currentTime}
         </div>
         {error && (
-          <div className="text-red-400 text-sm">
+          <div className="text-red-400 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">
             {error}
           </div>
         )}

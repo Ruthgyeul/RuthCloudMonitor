@@ -120,13 +120,13 @@ export default function DisplayPage() {
   return (
     <div className="min-h-screen bg-gray-900">
       <Header error={error} />
-      <div className="p-4 h-[calc(100vh-3rem)]">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
-          <div className="lg:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="p-2 sm:p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 sm:gap-4">
+          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             <SystemStats serverData={systemData} />
             <ResourceUsage serverData={systemData} networkHistory={networkHistory} />
           </div>
-          <div className="h-5/6">
+          <div className="h-[300px] sm:h-[calc(100vh-7rem)]">
             <ProcessList processes={systemData.processes} />
           </div>
         </div>
