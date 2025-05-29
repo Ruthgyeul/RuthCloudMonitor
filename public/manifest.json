@@ -1,7 +1,7 @@
 {
-  "name": "Server Monitor",
-  "short_name": "Server Monitor",
-  "description": "Server Monitor Web Application",
+  "name": "RuthServer Monitor",
+  "short_name": "RuthServer Monitor",
+  "description": "RuthServer Monitoring System",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#111827",
@@ -45,7 +45,7 @@
       "sizes": "1280x720",
       "type": "image/png",
       "platform": "wide",
-      "label": "Server Monitor Web Home"
+      "label": "RuthServer Monitoring System"
     }
   ]
 }

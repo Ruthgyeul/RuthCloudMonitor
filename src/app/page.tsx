@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Header } from '@/components/layout/Header';
+import { Header } from '@/components/common/Header';
 import { SystemStats } from '@/components/stats/SystemStats';
 import { ResourceUsage } from '@/components/stats/ResourceUsage';
 import { ProcessList } from '@/components/stats/ProcessList';

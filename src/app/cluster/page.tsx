@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Cpu, HardDrive, MemoryStick, Network, Thermometer, Fan, Clock, Activity } from 'lucide-react';
 import { NetworkChart } from '@/components/charts/NetworkChart';
-import { Header } from '@/components/layout/Header';
+import { Header } from '@/components/common/Header';
 
 interface Server {
     name: string;
@@ -93,6 +93,32 @@ const ClusterPage = () => {
         { name: 'RuthPiNode2', ip: 'cluster2.ruthcloud.xyz', type: 'rpi' }
     ];
 
+    const updateNetworkHistory = (serverIp: string, networkData: NetworkData | undefined) => {
+        const now = new Date();
+        const time = now.toLocaleTimeString('ko-KR', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            hour12: false 
+        });
+        
+        setNetworkHistory(prev => {
+            const serverHistory = prev[serverIp] || [];
+            const newHistory = [
+                ...serverHistory,
+                {
+                    time,
+                    download: networkData?.download || 0,
+                    upload: networkData?.upload || 0
+                }
+            ];
+            return {
+                ...prev,
+                [serverIp]: newHistory.slice(-30)
+            };
+        });
+    };
+
     const fetchServerData = async () => {
         const newData: ServersData = {};
 
@@ -104,33 +130,9 @@ const ClusterPage = () => {
 
                 const response = await fetch(url);
                 if (response.ok) {
-                    newData[server.ip] = await response.json();
-                    
-                    // 네트워크 히스토리 업데이트
-                    const now = new Date();
-                    const time = now.toLocaleTimeString('ko-KR', { 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        second: '2-digit',
-                        hour12: false 
-                    });
-                    
-                    setNetworkHistory(prev => {
-                        const serverHistory = prev[server.ip] || [];
-                        const newHistory = [
-                            ...serverHistory,
-                            {
-                                time,
-                                download: newData[server.ip].network?.download || 0,
-                                upload: newData[server.ip].network?.upload || 0
-                            }
-                        ];
-                        // 최대 30개의 데이터 포인트만 유지
-                        return {
-                            ...prev,
-                            [server.ip]: newHistory.slice(-30)
-                        };
-                    });
+                    const serverData = await response.json();
+                    newData[server.ip] = serverData;
+                    updateNetworkHistory(server.ip, serverData.network);
                 } else {
                     newData[server.ip] = { error: 'Failed to fetch' };
                 }
