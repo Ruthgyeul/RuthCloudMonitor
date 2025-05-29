@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Cpu, HardDrive, MemoryStick, Network, Thermometer, Fan, Clock, Activity } from 'lucide-react';
+import { NetworkChart } from '@/components/charts/NetworkChart';
+import { Header } from '@/components/layout/Header';
 
 interface Server {
     name: string;
@@ -72,10 +74,17 @@ interface ServersData {
     [key: string]: ServerData;
 }
 
+interface NetworkHistoryEntry {
+    time: string;
+    download: number;
+    upload: number;
+}
+
 const ClusterPage = () => {
     const [serversData, setServersData] = useState<ServersData>({});
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState(new Date());
+    const [networkHistory, setNetworkHistory] = useState<{ [key: string]: NetworkHistoryEntry[] }>({});
 
     const servers: Server[] = [
         { name: 'RuthServer', ip: '192.168.0.100', type: 'intel' },
@@ -96,6 +105,32 @@ const ClusterPage = () => {
                 const response = await fetch(url);
                 if (response.ok) {
                     newData[server.ip] = await response.json();
+                    
+                    // 네트워크 히스토리 업데이트
+                    const now = new Date();
+                    const time = now.toLocaleTimeString('ko-KR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        second: '2-digit',
+                        hour12: false 
+                    });
+                    
+                    setNetworkHistory(prev => {
+                        const serverHistory = prev[server.ip] || [];
+                        const newHistory = [
+                            ...serverHistory,
+                            {
+                                time,
+                                download: newData[server.ip].network?.download || 0,
+                                upload: newData[server.ip].network?.upload || 0
+                            }
+                        ];
+                        // 최대 30개의 데이터 포인트만 유지
+                        return {
+                            ...prev,
+                            [server.ip]: newHistory.slice(-30)
+                        };
+                    });
                 } else {
                     newData[server.ip] = { error: 'Failed to fetch' };
                 }
@@ -216,7 +251,7 @@ const ClusterPage = () => {
                     />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-mono" style={{ color }}>
+                    <span className="text-lg font-mono" style={{ color }}>
                         {percentage.toFixed(0)}%
                     </span>
                 </div>
@@ -263,21 +298,21 @@ const ClusterPage = () => {
                     {/* CPU */}
                     <div className="bg-gray-900 rounded p-1.5 flex flex-col">
                         <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center space-x-1">
-                                <Cpu className="w-3 h-3 text-blue-400" />
-                                <span className="text-xs text-gray-400">CPU</span>
+                            <div className="flex items-center space-x-2">
+                                <Cpu className="w-4 h-4 text-blue-400" />
+                                <span className="text-sm text-gray-400">CPU</span>
                             </div>
                         </div>
                         <div className="flex-1 flex flex-col justify-center items-center">
                             <div className="flex items-center justify-center">
                                 <PieChart
                                     percentage={cpu?.usage || 0}
-                                    size={36}
+                                    size={64}
                                     strokeWidth={3}
                                     color={getStatusColor(cpu?.usage || 0)}
                                 />
                             </div>
-                            <div className="text-xs text-center text-gray-500 mt-1">
+                            <div className="text-base text-center text-gray-500 mt-1">
                                 {cpu?.cores || 0} cores
                             </div>
                         </div>
@@ -286,21 +321,21 @@ const ClusterPage = () => {
                     {/* Memory */}
                     <div className="bg-gray-900 rounded p-1.5 flex flex-col">
                         <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center space-x-1">
-                                <MemoryStick className="w-3 h-3 text-purple-400" />
-                                <span className="text-xs text-gray-400">RAM</span>
+                            <div className="flex items-center space-x-2">
+                                <MemoryStick className="w-4 h-4 text-purple-400" />
+                                <span className="text-sm text-gray-400">RAM</span>
                             </div>
                         </div>
                         <div className="flex-1 flex flex-col justify-center items-center">
                             <div className="flex items-center justify-center">
                                 <PieChart
                                     percentage={memory?.percentage || 0}
-                                    size={36}
+                                    size={64}
                                     strokeWidth={3}
                                     color={getStatusColor(memory?.percentage || 0)}
                                 />
                             </div>
-                            <div className="text-xs text-center text-gray-500 mt-1">
+                            <div className="text-base text-center text-gray-500 mt-1">
                                 {formatMemory(memory)}
                             </div>
                         </div>
@@ -309,21 +344,21 @@ const ClusterPage = () => {
                     {/* Disk */}
                     <div className="bg-gray-900 rounded p-1.5 flex flex-col">
                         <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center space-x-1">
-                                <HardDrive className="w-3 h-3 text-green-400" />
-                                <span className="text-xs text-gray-400">Disk</span>
+                            <div className="flex items-center space-x-2">
+                                <HardDrive className="w-4 h-4 text-green-400" />
+                                <span className="text-sm text-gray-400">Disk</span>
                             </div>
                         </div>
                         <div className="flex-1 flex flex-col justify-center items-center">
                             <div className="flex items-center justify-center">
                                 <PieChart
                                     percentage={disk?.percentage || 0}
-                                    size={36}
+                                    size={64}
                                     strokeWidth={3}
                                     color={getStatusColor(disk?.percentage || 0)}
                                 />
                             </div>
-                            <div className="text-xs text-center text-gray-500 mt-1">
+                            <div className="text-base text-center text-gray-500 mt-1">
                                 {formatDisk(disk)}
                             </div>
                         </div>
@@ -332,24 +367,19 @@ const ClusterPage = () => {
                     {/* Network */}
                     <div className="bg-gray-900 rounded p-1.5 flex flex-col">
                         <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center space-x-1">
-                                <Network className="w-3 h-3 text-cyan-400" />
-                                <span className="text-xs text-gray-400">Net</span>
+                            <div className="flex items-center space-x-2">
+                                <Network className="w-4 h-4 text-cyan-400" />
+                                <span className="text-sm text-gray-400">Net</span>
                             </div>
-                            <span className="text-xs font-mono text-cyan-400">
-                                {network?.ping?.toFixed(0) || 0}ms
-                            </span>
                         </div>
                         <div className="flex-1 flex flex-col justify-center items-center">
-                            <div className="text-xs text-gray-500">
-                                <span className="text-blue-400">↓ {(network?.download || 0).toFixed(1)}</span>
-                                <span className="mx-2">|</span>
-                                <span className="text-green-400">↑ {(network?.upload || 0).toFixed(1)}</span>
+                            <div className="text-base">
+                                <div className="text-blue-400">↓ {(data.network?.download || 0).toFixed(1)} MB/s</div>
+                                <div className="text-green-400">↑ {(data.network?.upload || 0).toFixed(1)} MB/s</div>
                             </div>
-                            <div className="text-xs text-gray-600">
-                                <span>RX:{network?.errorRates?.rx || '0.00'}%</span>
-                                <span className="mx-2">|</span>
-                                <span>TX:{network?.errorRates?.tx || '0.00'}%</span>
+                            <div className="text-base text-gray-600">
+                                <div>RX: {network?.errorRates?.rx || '0.00'}%</div>
+                                <div>TX: {network?.errorRates?.tx || '0.00'}%</div>
                             </div>
                         </div>
                     </div>
@@ -405,15 +435,10 @@ const ClusterPage = () => {
     }
 
     return (
-        <div className="h-screen bg-gray-900 p-2 flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-2 flex-shrink-0">
-                <h1 className="text-lg font-bold text-white">Server Monitor</h1>
-                <div className="text-xs text-gray-400">
-                    {lastUpdate.toLocaleTimeString()}
-                </div>
-            </div>
-
+        <div className="h-screen flex flex-col">
+        {/* Header */}
+        <Header error={null} />
+        <div className="bg-gray-900 p-2 flex flex-col overflow-hidden">
             {/* Server Grid - Fill remaining space */}
             <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
                 {servers.map((server) => (
@@ -430,6 +455,7 @@ const ClusterPage = () => {
                 <div className="grid grid-cols-4 gap-2 text-center">
                     {servers.map((server) => {
                         const data = serversData[server.ip];
+                        const history = networkHistory[server.ip] || [];
                         if (!data || data.error) {
                             return (
                                 <div key={server.ip} className="text-xs">
@@ -442,10 +468,8 @@ const ClusterPage = () => {
                         return (
                             <div key={server.ip} className="text-xs">
                                 <div className="text-gray-400 truncate mb-1">{server.name}</div>
-                                <div className="text-green-400">
-                                    ↓{(data.network?.download || 0).toFixed(1)} ↑{(data.network?.upload || 0).toFixed(1)}
-                                </div>
-                                <div className="text-gray-500 text-xs">
+                                <NetworkChart data={history} minimal />
+                                <div className="text-gray-500 text-xs mt-1">
                                     {data.network?.ping?.toFixed(0) || 0}ms
                                 </div>
                             </div>
@@ -453,6 +477,7 @@ const ClusterPage = () => {
                     })}
                 </div>
             </div>
+        </div>
         </div>
     );
 };

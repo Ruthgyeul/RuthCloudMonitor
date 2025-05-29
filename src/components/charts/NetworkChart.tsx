@@ -5,14 +5,15 @@ import { formatNumber } from '@/utils/numberFormat';
 
 interface NetworkChartProps {
     data: NetworkHistoryEntry[];
+    minimal?: boolean;
 }
 
-export const NetworkChart: React.FC<NetworkChartProps> = ({ data }) => {
+export const NetworkChart: React.FC<NetworkChartProps> = ({ data, minimal }) => {
     if (!data || data.length === 0) {
         return (
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                <div className="text-xs text-gray-300 mb-2">NETWORK ACTIVITY</div>
-                <div className="h-48 flex items-center justify-center">
+            <div className={`bg-gray-800 rounded-lg p-3 border border-gray-700${minimal ? ' h-40' : ''}`}>
+                {!minimal && <div className="text-xs text-gray-300 mb-2">NETWORK ACTIVITY</div>}
+                <div className={minimal ? 'h-36' : 'h-48 flex items-center justify-center'}>
                     <span className="text-gray-500 text-sm">No network data available</span>
                 </div>
             </div>
@@ -36,9 +37,9 @@ export const NetworkChart: React.FC<NetworkChartProps> = ({ data }) => {
     });
 
     return (
-        <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-            <div className="text-xs text-gray-300 mb-2">NETWORK ACTIVITY</div>
-            <div className="h-48">
+        <div className={`bg-gray-800 rounded-lg p-3 border border-gray-700${minimal ? ' h-40' : ''}`}>
+            {!minimal && <div className="text-xs text-gray-300 mb-2">NETWORK ACTIVITY</div>}
+            <div className={minimal ? 'h-36' : 'h-48'}>
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data}>
                         <defs>
@@ -54,12 +55,13 @@ export const NetworkChart: React.FC<NetworkChartProps> = ({ data }) => {
                         <XAxis 
                             dataKey="time" 
                             tick={{ fontSize: 10, fill: '#9ca3af' }}
-                            tickFormatter={(_, index) => getXAxisLabel(index)}
-                            ticks={xAxisTicks}
+                            tickFormatter={(_, index) => minimal ? '' : getXAxisLabel(index)}
+                            ticks={minimal ? [] : xAxisTicks}
                         />
                         <YAxis 
                             tick={{ fontSize: 10, fill: '#9ca3af' }}
                             tickFormatter={(value) => `${formatNumber(value)} MB/s`}
+                            hide={false}
                         />
                         <Tooltip 
                             formatter={(value: number) => [`${formatNumber(value)} MB/s`, '']}
@@ -71,13 +73,13 @@ export const NetworkChart: React.FC<NetworkChartProps> = ({ data }) => {
                                 color: '#e5e7eb'
                             }}
                         />
-                        <Legend 
+                        {!minimal && <Legend 
                             verticalAlign="top" 
                             height={36}
                             formatter={(value) => (
                                 <span className="text-xs text-gray-400">{value}</span>
                             )}
-                        />
+                        />}
                         <Area
                             type="monotone"
                             dataKey="download"
