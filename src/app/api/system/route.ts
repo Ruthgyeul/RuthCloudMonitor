@@ -7,9 +7,9 @@ const defaultServerData: ServerData = {
     cpu: { usage: 0, cores: 0, temperature: 0 },
     memory: { used: 0, total: 0, percentage: 0 },
     disk: { used: 0, total: 0, percentage: 0 },
-    network: { 
-        download: 0, 
-        upload: 0, 
+    network: {
+        download: 0,
+        upload: 0,
         ping: 0,
         errorRates: {
             rx: '0',
@@ -25,19 +25,33 @@ const defaultServerData: ServerData = {
 export async function GET() {
     try {
         const data = await getSystemInfo();
-        
+
         // 데이터 유효성 검사
         if (!data || !isValidServerData(data)) {
             console.error('Invalid server data received');
-            return NextResponse.json(defaultServerData);
+            return new NextResponse(JSON.stringify(defaultServerData), {
+                headers: corsHeaders
+            });
         }
-        
-        return NextResponse.json(data);
+
+        return new NextResponse(JSON.stringify(data), {
+            headers: corsHeaders
+        });
     } catch (error) {
         console.error('Error fetching system data:', error);
-        return NextResponse.json(defaultServerData);
+        return new NextResponse(JSON.stringify(defaultServerData), {
+            headers: corsHeaders
+        });
     }
 }
+
+// CORS 헤더
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Content-Type': 'application/json'
+};
 
 // 데이터 유효성 검사 함수
 function isValidServerData(data: any): data is ServerData {
@@ -53,4 +67,9 @@ function isValidServerData(data: any): data is ServerData {
         typeof data.fan === 'object' &&
         Array.isArray(data.processes)
     );
+}
+
+// OPTIONS 메서드 핸들링 (CORS preflight 요청 처리)
+export function OPTIONS() {
+    return new NextResponse(null, { headers: corsHeaders });
 }
