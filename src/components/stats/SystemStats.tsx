@@ -1,7 +1,8 @@
 import React from 'react';
 import { Clock, Thermometer, Fan, Wifi } from 'lucide-react';
-import { ServerData, X86TemperatureInfo, ARMTemperatureInfo, isX86TemperatureInfo } from '@/types/system';
+
 import { formatNumber, formatTemperature } from '@/utils/numberFormat';
+import { ServerData, X86TemperatureInfo, ARMTemperatureInfo, isX86TemperatureInfo } from '@/types/system';
 
 interface SystemStatsProps {
     serverData: ServerData;

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Cpu, Activity, HardDrive } from 'lucide-react';
-import { ServerData, NetworkHistoryEntry } from '@/types/system';
+
 import { MiniPieChart } from '@/components/charts/MiniPieChart';
 import { NetworkChart } from '@/components/charts/NetworkChart';
 import { formatNumber } from '@/utils/numberFormat';
+import { ServerData, NetworkHistoryEntry } from '@/types/system';
 
 interface ResourceUsageProps {
     serverData: ServerData;

@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Cpu, HardDrive, MemoryStick, Network, Thermometer, Fan, Clock, Activity } from 'lucide-react';
-import { NetworkChart } from '@/components/charts/NetworkChart';
+
 import { Header } from '@/components/common/Header';
 import Loading from '@/app/loading';
+import { NetworkChart } from '@/components/charts/NetworkChart';
 
 interface Server {
     name: string;

@@ -6,9 +6,7 @@ import { Header } from '@/components/common/Header';
 import { SystemStats } from '@/components/stats/SystemStats';
 import { ResourceUsage } from '@/components/stats/ResourceUsage';
 import { ProcessList } from '@/components/stats/ProcessList';
-
 import { fetchSystemData } from '@/services/systemService';
-
 import { ServerData, NetworkHistoryEntry } from '@/types/system';
 
 export default function DisplayPage() {

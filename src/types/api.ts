@@ -1,4 +1,4 @@
-import { ServerData } from './system';
+import { ServerData } from '@/types/system';
 
 export interface SystemDataResponse {
   serverData: ServerData;

@@ -1,7 +1,8 @@
 import React from 'react';
-import { NetworkHistoryEntry } from '@/types/system';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+
 import { formatNumber } from '@/utils/numberFormat';
+import { NetworkHistoryEntry } from '@/types/system';
 
 interface NetworkChartProps {
     data: NetworkHistoryEntry[];

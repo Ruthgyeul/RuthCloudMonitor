@@ -1,6 +1,7 @@
 import React from 'react';
-import { Process } from '@/types/system';
+
 import { formatNumber } from '@/utils/numberFormat';
+import { Process } from '@/types/system';
 
 interface ProcessListProps {
   processes: Process[];

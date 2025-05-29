@@ -1,6 +1,8 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
+
+import { isValidServerData } from '@/utils/validation';
 import { ServerData, Process, X86TemperatureInfo, ARMTemperatureInfo, TemperatureValue, TemperatureInfo, isX86TemperatureInfo, isARMTemperatureInfo } from '@/types/system';
 
 const execAsync = promisify(exec);
@@ -312,22 +314,6 @@ export async function updateSystemInfo() {
     } finally {
         isUpdating = false;
     }
-}
-
-// 데이터 유효성 검사 함수
-function isValidServerData(data: any): data is ServerData {
-    return (
-        data &&
-        typeof data === 'object' &&
-        typeof data.cpu === 'object' &&
-        typeof data.memory === 'object' &&
-        typeof data.disk === 'object' &&
-        typeof data.network === 'object' &&
-        typeof data.uptime === 'object' &&
-        typeof data.temperature === 'object' &&
-        typeof data.fan === 'object' &&
-        Array.isArray(data.processes)
-    );
 }
 
 // 시스템 정보 가져오기

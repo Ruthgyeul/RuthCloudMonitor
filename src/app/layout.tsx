@@ -1,13 +1,12 @@
 import * as React from "react";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { NextUIProvider } from "@nextui-org/react";
-import { Suspense } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import Error from '@/app/error';
 import Loading from '@/app/loading';
-
+import Error from '@/app/error';
 import "@/styles/globals.css";
 
 const geistSans = Geist({
@@ -91,7 +90,6 @@ export default function RootLayout({
       <head>
         <meta name="theme-color" content="#111827"/>
         <link rel="manifest" href="/manifest.json"/>
-        {/* PWA 관련 메타 태그 */}
         <meta name="mobile-web-app-capable" content="yes"/>
         <meta name="mobile-web-app-status-bar-style" content="default"/>
         <meta name="mobile-web-app-title" content="RuthServer"/>
@@ -101,9 +99,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-auto bg-gray-900`}
       >
       <NextUIProvider>
-      <ErrorBoundary 
-        FallbackComponent={Error}
-      >
+      <ErrorBoundary FallbackComponent={Error}>
           <Suspense fallback={<Loading />} >
               {children}
           </Suspense>

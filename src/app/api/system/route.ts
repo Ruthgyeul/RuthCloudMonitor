@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSystemInfo } from '@/utils/systemMonitor';
 import { ServerData } from '@/types/system';
+import { isValidServerData } from '@/utils/validation';
 
 // 기본 서버 데이터
 const defaultServerData: ServerData = {
@@ -52,22 +53,6 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json'
 };
-
-// 데이터 유효성 검사 함수
-function isValidServerData(data: any): data is ServerData {
-    return (
-        data &&
-        typeof data === 'object' &&
-        typeof data.cpu === 'object' &&
-        typeof data.memory === 'object' &&
-        typeof data.disk === 'object' &&
-        typeof data.network === 'object' &&
-        typeof data.uptime === 'object' &&
-        typeof data.temperature === 'object' &&
-        typeof data.fan === 'object' &&
-        Array.isArray(data.processes)
-    );
-}
 
 // OPTIONS 메서드 핸들링 (CORS preflight 요청 처리)
 export function OPTIONS() {
