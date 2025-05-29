@@ -23,12 +23,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
     metadataBase: new URL('https://ruthcloud.xyz'),
     title: {
-        template: '%s | RuthCloud',
-        default: 'Ruth Cloud'
+        template: '%s | RuthServer',
+        default: 'RuthServer Cloud'
     },
-    description: "RuthCloud for multiple cloud platforms",
+    description: "RuthServer for multiple cloud platforms",
     manifest: "/manifest.json",
-    applicationName: "Ruth Cloud",
+    applicationName: "RuthServer Cloud",
     keywords: [],
     authors: [{ name: "Ruthgyeul" }],
     creator: "Ruthgyeul",
@@ -47,16 +47,16 @@ export const metadata: Metadata = {
         shortcut: ["/favicon.ico"]
     },
     openGraph: {
-        title: "Ruth Cloud",
-        description: "RuthCloud for multiple cloud platforms",
+        title: "RuthServer Cloud",
+        description: "RuthServer for multiple cloud platforms",
         url: "https://ruthcloud.xyz",
-        siteName: "GDGoC INHA",
+        siteName: "RuthServer Cloud",
         images: [
             {
                 url: "https://ruthcloud.xyz/screenshots/home.png",
                 width: 1280,
                 height: 720,
-                alt: "Ruth Cloud Home"
+                alt: "RuthServer Home"
             }
         ],
         type: "website",
@@ -64,8 +64,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: "summary_large_image",
-        title: "Ruth Cloud",
-        description: "RuthCloud for multiple cloud platforms",
+        title: "RuthServer Cloud",
+        description: "RuthServer for multiple cloud platforms",
         images: ["https://ruthcloud.xyz/screenshots/home.png"],
         creator: "Ruthgyeul",
     },
@@ -94,8 +94,8 @@ export default function RootLayout({
         {/* PWA 관련 메타 태그 */}
         <meta name="mobile-web-app-capable" content="yes"/>
         <meta name="mobile-web-app-status-bar-style" content="default"/>
-        <meta name="mobile-web-app-title" content="Ruth Cloud"/>
-        <title>Ruth Cloud</title>
+        <meta name="mobile-web-app-title" content="RuthServer"/>
+        <title>RuthServer Cloud</title>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-auto bg-gray-900`}

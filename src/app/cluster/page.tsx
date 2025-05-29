@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Cpu, HardDrive, MemoryStick, Network, Thermometer, Fan, Clock, Activity } from 'lucide-react';
 import { NetworkChart } from '@/components/charts/NetworkChart';
 import { Header } from '@/components/common/Header';
+import Loading from '@/app/loading';
 
 interface Server {
     name: string;
@@ -426,14 +427,7 @@ const ClusterPage = () => {
     };
 
     if (loading) {
-        return (
-            <div className="h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-white text-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mx-auto mb-2"></div>
-                    <p className="text-sm">Loading...</p>
-                </div>
-            </div>
-        );
+        return (<><Loading /></>);
     }
 
     return (
