@@ -87,10 +87,10 @@ const ClusterPage = () => {
     const [networkHistory, setNetworkHistory] = useState<{ [key: string]: NetworkHistoryEntry[] }>({});
 
     const servers: Server[] = [
-        { name: 'RuthServer', ip: '192.168.0.100', type: 'intel' },
-        { name: 'RuthPiMaster', ip: '192.168.0.200:3000', type: 'rpi' },
-        { name: 'RuthPiNode1', ip: '192.168.0.201:3000', type: 'rpi' },
-        { name: 'RuthPiNode2', ip: '192.168.0.202:3000', type: 'rpi' }
+        { name: 'RuthServer', ip: 'ruthcloud.xyz', type: 'intel' },
+        { name: 'RuthPiMaster', ip: 'cluster0.ruthcloud.xyz', type: 'rpi' },
+        { name: 'RuthPiNode1', ip: 'cluster1.ruthcloud.xyz', type: 'rpi' },
+        { name: 'RuthPiNode2', ip: 'cluster2.ruthcloud.xyz', type: 'rpi' }
     ];
 
     const fetchServerData = async () => {
@@ -100,7 +100,7 @@ const ClusterPage = () => {
             try {
                 const url = server.type === 'intel'
                     ? `/api/system`
-                    : `http://${server.ip}/api/system`;
+                    : `https://${server.ip}/api/system`;
 
                 const response = await fetch(url);
                 if (response.ok) {
