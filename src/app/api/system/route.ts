@@ -23,7 +23,30 @@ const defaultServerData: ServerData = {
     processes: []
 };
 
-export async function GET() {
+// 허용된 origin 목록
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://ruthcloud.xyz',
+    'https://cluster0.ruthcloud.xyz',
+    'https://cluster1.ruthcloud.xyz',
+    'https://cluster2.ruthcloud.xyz'
+];
+
+function getCorsHeaders(origin: string | undefined) {
+    const headers: Record<string, string> = {
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Content-Type': 'application/json'
+    };
+    if (origin && allowedOrigins.includes(origin)) {
+        headers['Access-Control-Allow-Origin'] = origin;
+    }
+    return headers;
+}
+
+export async function GET(request: Request) {
+    const origin = request.headers.get('origin') || undefined;
+
     try {
         const data = await getSystemInfo();
 
@@ -31,30 +54,23 @@ export async function GET() {
         if (!data || !isValidServerData(data)) {
             console.error('Invalid server data received');
             return new NextResponse(JSON.stringify(defaultServerData), {
-                headers: corsHeaders
+                headers: getCorsHeaders(origin)
             });
         }
 
         return new NextResponse(JSON.stringify(data), {
-            headers: corsHeaders
+            headers: getCorsHeaders(origin)
         });
     } catch (error) {
         console.error('Error fetching system data:', error);
         return new NextResponse(JSON.stringify(defaultServerData), {
-            headers: corsHeaders
+            headers: getCorsHeaders(origin)
         });
     }
 }
 
-// CORS 헤더
-const corsHeaders = {
-    'Access-Control-Allow-Origin': 'http://localhost:3000, https://ruthcloud.xyz, https://*.ruthcloud.xyz',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Content-Type': 'application/json'
-};
-
 // OPTIONS 메서드 핸들링 (CORS preflight 요청 처리)
-export function OPTIONS() {
-    return new NextResponse(null, { headers: corsHeaders });
+export function OPTIONS(request: Request) {
+    const origin = request.headers.get('origin') || undefined;
+    return new NextResponse(null, { headers: getCorsHeaders(origin) });
 }
