@@ -1,8 +1,7 @@
 import * as React from "react";
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { NextUIProvider } from "@nextui-org/react";
-import { ErrorBoundary, FallbackProps } from "react-error-boundary";
+import { ErrorBoundary } from "react-error-boundary";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import Loading from '@/app/loading';
@@ -86,7 +85,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en"suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#111827"/>
         <link rel="manifest" href="/manifest.json"/>
@@ -98,13 +97,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-auto bg-gray-900`}
       >
-      <NextUIProvider>
-      <ErrorBoundary FallbackComponent={Error}>
-          <Suspense fallback={<Loading />} >
-              {children}
+        <ErrorBoundary FallbackComponent={Error}>
+          <Suspense fallback={<Loading />}>
+            {children}
           </Suspense>
-      </ErrorBoundary>
-      </NextUIProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
