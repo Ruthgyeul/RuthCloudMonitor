@@ -9,7 +9,7 @@ interface NetworkChartProps {
     minimal?: boolean;
 }
 
-export const NetworkChart: React.FC<NetworkChartProps> = ({ data, minimal }) => {
+export const NetworkChart: React.FC<NetworkChartProps> = React.memo(({ data, minimal }) => {
     if (!data || data.length === 0) {
         return (
             <div className={`bg-gray-800 rounded-lg p-3 border border-gray-700${minimal ? ' h-40' : ''}`}>
@@ -102,4 +102,4 @@ export const NetworkChart: React.FC<NetworkChartProps> = ({ data, minimal }) => 
             </div>
         </div>
     );
-}; 
+}); 

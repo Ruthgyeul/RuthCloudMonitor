@@ -5,10 +5,11 @@ interface MiniPieChartProps {
     size: number;
 }
 
-export const MiniPieChart: React.FC<MiniPieChartProps> = ({ percentage, size }) => {
+export const MiniPieChart: React.FC<MiniPieChartProps> = React.memo(({ percentage, size }) => {
     const radius = size / 2;
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
+    const strokeColor = percentage > 80 ? '#ef4444' : percentage > 60 ? '#f59e0b' : '#10b981';
 
     return (
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -25,7 +26,7 @@ export const MiniPieChart: React.FC<MiniPieChartProps> = ({ percentage, size }) 
                 cy={radius}
                 r={radius - 2}
                 fill="none"
-                stroke={percentage > 80 ? '#ef4444' : percentage > 60 ? '#f59e0b' : '#10b981'}
+                stroke={strokeColor}
                 strokeWidth="4"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
@@ -33,4 +34,4 @@ export const MiniPieChart: React.FC<MiniPieChartProps> = ({ percentage, size }) 
             />
         </svg>
     );
-}; 
+}); 

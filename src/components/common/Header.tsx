@@ -1,35 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Server } from 'lucide-react';
 
 interface HeaderProps {
   error: string | null;
 }
 
-export const Header: React.FC<HeaderProps> = ({ error }) => {
+export const Header: React.FC<HeaderProps> = React.memo(({ error }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
 
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const date = now.toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
-      const time = now.toLocaleTimeString('ko-KR', { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        hour12: false 
-      });
-      setCurrentTime(`${date} ${time}`);
-    };
+  const updateTime = useCallback(() => {
+    const now = new Date();
+    const date = now.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const time = now.toLocaleTimeString('ko-KR', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit',
+      hour12: false 
+    });
+    setCurrentTime(`${date} ${time}`);
+  }, []);
 
+  useEffect(() => {
     updateTime();
     const interval = setInterval(updateTime, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+      setCurrentTime(''); // 컴포넌트 언마운트 시 상태 초기화
+    };
+  }, [updateTime]);
 
   return (
     <div className="h-12 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-2 sm:px-4">
@@ -50,4 +53,4 @@ export const Header: React.FC<HeaderProps> = ({ error }) => {
       </div>
     </div>
   );
-}; 
+}); 
